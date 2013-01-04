@@ -1,10 +1,11 @@
 #ifndef IMAGEGS_H
 #define IMAGEGS_H
 
+#include "image.h"
 #include <string>
 using namespace std;
 
-class ImageGS
+class ImageGS : public Image
 {
 public:
     /**
@@ -26,6 +27,9 @@ public:
      */
     ImageGS(const string &filename);
 
+    ~ImageGS();
+
+
     /**
      * @brief operator ()
      * @param i
@@ -33,30 +37,21 @@ public:
      * @return
      */
     inline float& operator() (unsigned i, unsigned j) { return m_img[i][j]; }
+
     /**
      * @brief operator ()
      * @param i
      * @param j
      * @return
      */
-    inline float  operator() (unsigned i, unsigned j) const { return m_img[i][j]; }
-
-    /**
-     * @brief getWidth
-     * @return La largeur de l'image
-     */
-    inline unsigned getWidth() const { return m_width; }
-    /**
-     * @brief getHeight
-     * @return La hauteur de l'image
-     */
-    inline unsigned getHeight() const { return m_height; }
+    inline float operator() (unsigned i, unsigned j) const { return m_img[i][j]; }
 
     /**
      * @brief readPGM
      * @param filename
      */
     void readPGM(const string &filename);
+
     /**
      * @brief writePGM
      * @param filename
@@ -64,10 +59,36 @@ public:
     void writePGM(const string &filename);
 
     /**
-     * Calcule le gradient vertical (du moins pour obtenir les edges verticaux)
+     * Calcule le gradient horizontallement
      * @return Le gradient de l'image selon x
      */
+    ImageGS* computeHorizontalGradient();
+
+    /**
+     * Calcule le gradient verticallement
+     * @return Le gradient de l'image selon y
+     */
     ImageGS* computeVerticalGradient();
+
+    /**
+     * Calcule la projection horizontal de l'image
+     * @brief computeHorizontalProjection
+     * @return Un vecteur de taille m_width
+     */
+    float* computeHorizontalProjection();
+
+    /**
+     * Calcule la projection verticale de l'image
+     * @brief computeVerticalProjection
+     * @return Un vecteur de taille m_height
+     */
+    float* computeVerticalProjection();
+
+    /**
+     * @brief computeHistogram
+     * @return
+     */
+    float *computeHistogram();
 
     /**
      * Recal les valeur de la matrice image entre 0 et 255
@@ -81,17 +102,30 @@ public:
      * @param t
      */
     void thresholding(float t);
-    void thresholding();
+
+    /**
+     * @brief thresholdingHist
+     * @param p
+     */
+    void thresholdingHist(float p);
+
+    /**
+     * Binarisation selon la technique de Otsu
+     * @brief thresholding
+     */
+    void thresholdingOstu();
+
+
+    void thresholdingSmart(float p);
 
     // Opérateurs morphologiques
-    void erosion(float **mask, int size);
-    void dilatation(float **mask, int size);
-    void opening(float **mask, int size);
-    void closing(float **mask, int size);
+    void erosion(float **mask, int width, int height);
+    void dilatation(float **mask, int width, int height);
+    void opening(float **mask, int width, int height);
+    void closing(float **mask, int width, int height);
 
 private:
     float** m_img;
-    unsigned m_width, m_height;
 };
 
 #endif // IMAGEGS_H

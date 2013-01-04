@@ -18,9 +18,13 @@ TEMPLATE = app
 SOURCES += main.cpp \
     platedetector.cpp \
     tools.cpp \
-    imagegs.cpp
+    imagegs.cpp \
+    image.cpp \
+    imagergb.cpp
 
 HEADERS += \
     platedetector.h \
     tools.h \
-    imagegs.h
+    imagegs.h \
+    image.h \
+    imagergb.h

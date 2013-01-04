@@ -1,25 +1,10 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
-/*------------------------------------------------*/
-/* DEFINITIONS -----------------------------------*/
-/*------------------------------------------------*/
-#define SWAP(a,b) tempr=(a);(a)=(b);(b)=tempr
-#define SQUARE(X) ((X)*(X))
-#define MAX(i,j)  ((i)>(j)?(i):(j))
-#define MIN(i,j)  ((i)>(j)?(i):(j))
-
-#define NBCHAR 200
-
-#define FFT   1
-#define IFFT -1
-#define FFT2D 2
-
-#define GREY_LEVEL 255
-#define PI 3.141592654
-
-#define WHITE 255
-#define BLACK 0
+#include "imagergb.h"
+#include "imagegs.h"
+#include <string>
+using namespace std;
 
 /**
  * Calcule la FFT
@@ -40,5 +25,21 @@ void FFTDD(float** mtxR,float** mtxI,int lgth, int wdth);
  * @param wdth
  */
 void IFFTDD(float** mtxR,float**  mtxI,int lgth,int wdth);
+
+/**
+ * @brief guassianFilter
+ * @param vect
+ * @param w
+ * @param sigma
+ */
+void guassianFilter(float* vect, int height, int w, float sigma);
+
+/**
+ * @brief writeVect
+ * @param vect
+ * @param height
+ * @param filename
+ */
+void writeVect(float* vect, unsigned height, string filename);
 
 #endif // TOOLS_H

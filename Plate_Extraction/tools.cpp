@@ -1,6 +1,83 @@
 #include "tools.h"
 #include <malloc.h>
 #include <math.h>
+#include <algorithm>
+#include <assert.h>
+#include <iostream>
+
+using namespace std;
+
+/*------------------------------------------------*/
+/* DEFINITIONS -----------------------------------*/
+/*------------------------------------------------*/
+#define SWAP(a,b) tempr=(a);(a)=(b);(b)=tempr
+#define SQUARE(X) ((X)*(X))
+#define MAX(i,j)  ((i)>(j)?(i):(j))
+#define MIN(i,j)  ((i)>(j)?(i):(j))
+
+#define NBCHAR 200
+
+#define FFT   1
+#define IFFT -1
+#define FFT2D 2
+
+#define GREY_LEVEL 255
+#define PI 3.141592654
+
+#define WHITE 255
+#define BLACK 0
+/*------------------------------------------------*/
+
+#define H(j, sig) (exp(-(j*pow(sig, 2.f))/2.f))
+
+void guassianFilter(float* vect, int height, int w, float sigma) {
+    float k = 0.f;
+
+    // calcule du coef k
+    for (int i = 1; i <= w; ++i) {
+        k += H(i, sigma) + 1.f;
+    }
+    k *= 2.f;
+
+    // Filtrage
+    float* newVect = new float[height];
+    for (int i = 0; i < height; ++i) {
+        float acc = 0.f;
+        for (int j = 1; j <= w; ++j) {
+            acc += vect[max(i-j, 0)]*H(j, sigma)
+                 + vect[min(i+j, height-1)]*H(j, sigma);
+        }
+        newVect[i] = (1.f/k)*(vect[i] + acc);
+    }
+
+    // copy
+    for (int i = 0; i < height; ++i)
+        vect[i] = newVect[i];
+
+    delete[] newVect;
+}
+
+void writeVect(float* vect, unsigned height, string filename) {
+    // Output to a text file
+    FILE* f = fopen(filename.c_str(), "w");
+    assert(f != NULL);
+
+    // Ecriture des données
+    std::cout << ">> Ecriture des données dans " << filename << std::endl;
+    for (unsigned i = 0; i < height; ++i)
+        fprintf(f, "%d %f\n", i, vect[i]);
+
+    // Fermeture du flux
+    fclose(f);
+}
+
+void foundConnectedComponent(const ImageGS& img){
+    for (int i = 0; i < img.getHeight(); ++i)
+    for (int j = 0; j < img.getWidth(); ++j) {
+        // On vérifit la 8 connexité
+
+    }
+}
 
 /*
  * Fonctions importées du TP5 (FonctionDemo5.c)
