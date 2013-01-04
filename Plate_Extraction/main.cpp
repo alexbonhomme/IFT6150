@@ -10,15 +10,15 @@
 int main(int argc, char *argv[])
 {
 
-#if 1
+#if 0
     ImageGS car("../data/991211-001");
     //ImageGS car("../data/991211-002");
     //ImageGS car("../data/991211-003");
 #else
-    //ImageGS car("../data/991213-002");
+    ImageGS car("../data/991213-002");
     //ImageGS car("../data/991213-010");
     //ImageGS car("../data/991213-006");
-    ImageGS car("../data/991213-005");
+    //ImageGS car("../data/991213-005");
 #endif
     ImageGS *grad = car.computeHorizontalGradient();
     grad->recal();
@@ -145,8 +145,9 @@ int main(int argc, char *argv[])
     // On construit la liste des (potentiels) plaque extraites de l'image
     std::vector<ImageGS*> *listImgPlate = new std::vector<ImageGS*>();
     for (unsigned n = 0; n < listPlate->size(); ++n) {
-        int x1 = (*listPlate)[n][0], y1 = (*listPlate)[n][1],
-            x2 = (*listPlate)[n][2], y2 = (*listPlate)[n][3];
+        //  on fixe si possible une marge de 2px (pour eviter le crop)
+        int x1 = max((*listPlate)[n][0]-2, 0), y1 = max((*listPlate)[n][1]-2, 0),
+            x2 = min((*listPlate)[n][2]+2, (int)car.getWidth()), y2 = min((*listPlate)[n][3]+2, (int)car.getHeight());
         unsigned w = x2-x1, h = y2-y1;
 
         // On crée la miniature
@@ -165,20 +166,50 @@ int main(int argc, char *argv[])
         //plate_grad = plate_grad->computeHorizontalGradient();
         //plate_grad->recal();
 #if 1
-    width=1; height=3;
-    mask = new float*[height];
-    for (int i = 0; i < height; ++i) {
-        mask[i] = new float[width];
-        for (int j = 0; j < width; ++j)
-            mask[i][j] = 255.f;
-    }
+        width=1; height=3;
+        mask = new float*[height];
+        for (int i = 0; i < height; ++i) {
+            mask[i] = new float[width];
+            for (int j = 0; j < width; ++j)
+                mask[i][j] = 255.f;
+        }
 
-    plate_grad->opening(mask, width, height);
+        plate_grad->opening(mask, width, height);
 #endif
 
-    char filename[100];
-    sprintf(filename, "t_plate_%d", n);
-    plate_grad->writePGM(filename);
+        /* Erostion / Disatation extraire les contours */
+        ImageGS erode(*plate_grad);
+#if 1
+        width=2; height=2;
+        mask = new float*[height];
+        for (int i = 0; i < height; ++i) {
+            mask[i] = new float[width];
+            for (int j = 0; j < width; ++j)
+                mask[i][j] = 255.f;
+        }
+
+        erode.erosion(mask, width, height);
+#endif
+
+#if 1
+        width=2; height=2;
+        mask = new float*[height];
+        for (int i = 0; i < height; ++i) {
+            mask[i] = new float[width];
+            for (int j = 0; j < width; ++j)
+                mask[i][j] = 255.f;
+        }
+
+        plate_grad->dilatation(mask, width, height);
+#endif
+
+        // on soustrait l'érodé au dilaté pour garder que les contours
+        (*plate_grad) -= erode;
+
+
+        char filename[100];
+        sprintf(filename, "t_plate_%d", n);
+        plate_grad->writePGM(filename);
 
         //plate_grad->writePGM("grad");
         int var1=0, var2=0, var3=0;
@@ -192,7 +223,7 @@ int main(int argc, char *argv[])
                 ++var3;
         }
 
-        int T = 11; // seuil de variation (empirique)
+        int T = 15; // seuil de variation (empirique)
         std::cout << "Variations (seuil "<< T << ") - H/3: " << var1 <<
                      " H/2: " << var2 <<
                      " H-H/3: " << var3 << "\n" << std::endl;

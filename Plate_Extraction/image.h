@@ -5,6 +5,10 @@ class Image
 {
 public:
     Image(unsigned width, unsigned height);
+
+    /**
+     * Destructor
+     */
     virtual ~Image() {}
 
     /**

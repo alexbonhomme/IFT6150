@@ -219,13 +219,13 @@ std::vector<int*>* foundConnectedComponents(const ImageGS& img, ImageRGB* out) {
         float ratio = height / (float)width;
 
         // On vérifit d'abord le ration (la plaque est un rectangle)
-        if( ratio > 0.2 && ratio < 0.8 ) {
+        if( ratio > 0.2 && ratio < 0.7 ) {
+            printf("DEBUG :: Width: %d  Height: %d - Ratio: %f\n", width, height, ratio);
 
-            printf("%d %d\n", width, height);
             // On vérifit que le rectangle n'est pas trop petit ou trop grand
-            if( width > 30 && width < 200 && height > 7 && height < 60) {
+            if( width > 30 && width < 130 && height > 7 && height < 60) {
                 out->drawRect(x1, y1, x2, y2);
-                printf("%d %d %d %d\n", x1, y1, x2, y2);
+                printf("DEBUG : x1:%d y1:%d x2:%d y2:%d\n", x1, y1, x2, y2);
                 outList->push_back((*connectList)[n]);
             }
         }

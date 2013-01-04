@@ -3,6 +3,8 @@
 
 #include "image.h"
 #include <string>
+#include <assert.h>
+
 using namespace std;
 
 class ImageGS : public Image
@@ -27,8 +29,10 @@ public:
      */
     ImageGS(const string &filename);
 
+    /**
+     * Destructor
+     */
     ~ImageGS();
-
 
     /**
      * @brief operator ()
@@ -45,6 +49,30 @@ public:
      * @return
      */
     inline float operator() (unsigned i, unsigned j) const { return m_img[i][j]; }
+
+    /**
+     * @brief operator +=
+     * @param img
+     * @return
+     */
+    inline ImageGS& operator+= (const ImageGS &img) {
+        assert(m_height == img.getHeight() && m_width == img.getWidth());
+        for (unsigned i = 0; i < m_height; ++i)
+        for (unsigned j = 0; j < m_width; ++j)
+            m_img[i][j] += img(i, j);
+    }
+
+    /**
+     * @brief operator -=
+     * @param img
+     * @return
+     */
+    inline ImageGS& operator-= (const ImageGS &img) {
+        assert(m_height == img.getHeight() && m_width == img.getWidth());
+        for (unsigned i = 0; i < m_height; ++i)
+        for (unsigned j = 0; j < m_width; ++j)
+            m_img[i][j] -= img(i, j);
+    }
 
     /**
      * @brief readPGM

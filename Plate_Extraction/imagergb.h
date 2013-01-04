@@ -68,6 +68,9 @@ public:
      */
     ImageRGB(const ImageGS &in);
 
+    /**
+     * Destructor
+     */
     ~ImageRGB();
 
     /**
