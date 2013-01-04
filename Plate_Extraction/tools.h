@@ -4,6 +4,7 @@
 #include "imagergb.h"
 #include "imagegs.h"
 #include <string>
+#include <vector>
 using namespace std;
 
 /**
@@ -41,5 +42,11 @@ void guassianFilter(float* vect, int height, int w, float sigma);
  * @param filename
  */
 void writeVect(float* vect, unsigned height, string filename);
+
+/**
+ * @brief foundConnectedComponents
+ * @param img
+ */
+std::vector<int *> *foundConnectedComponents(const ImageGS& img, ImageRGB* out);
 
 #endif // TOOLS_H

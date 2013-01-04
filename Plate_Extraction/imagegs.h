@@ -97,6 +97,12 @@ public:
     void recal();
 
     /**
+     * Inverse les niveau de gris de l'image
+     * @brief inverse
+     */
+    void inverse();
+
+    /**
      * Seuillage de l'image (binarisation)
      * @brief thresholding
      * @param t

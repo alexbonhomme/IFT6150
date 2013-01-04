@@ -1,6 +1,7 @@
 #include "imagergb.h"
 #include <stdio.h>
 #include <assert.h>
+#include <iostream>
 
 ImageRGB::ImageRGB(unsigned width, unsigned height) :
     Image(width, height)
@@ -30,6 +31,8 @@ ImageRGB::ImageRGB(const string &filename) :
     // Ouverture du flux
     FILE* f = fopen(full_filename.c_str(), "r");
     assert(f != NULL);
+
+    std::cout << "Lecture du fichier PGM : " << full_filename << std::endl;
 
     // Lecture du header
     char buf[100];
@@ -80,6 +83,8 @@ void ImageRGB::readPPM(const string &filename) {
     FILE* f = fopen(full_filename.c_str(), "r");
     assert(f != NULL);
 
+    std::cout << "Lecture du fichier PPM : " << full_filename << std::endl;
+
     // Lecture du header
     char buf[100];
     fgets(buf, 100, f);
@@ -110,6 +115,8 @@ void ImageRGB::writePPM(const string &filename) {
     // Ouverture du flux
     FILE* f = fopen(full_filename.c_str(), "w");
     assert(f != NULL);
+
+    std::cout << "Sauvergarde du fichier PPM : " << full_filename << std::endl;
 
     // Ecriture du header
     fprintf(f,"P6\n#\n%d %d\n255\n", m_width, m_height);

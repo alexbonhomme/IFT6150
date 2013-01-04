@@ -36,6 +36,8 @@ ImageGS::ImageGS(const string &filename) :
     FILE* f = fopen(full_filename.c_str(), "r");
     assert(f != NULL);
 
+    std::cout << "Lecture du fichier PGM : " << full_filename << std::endl;
+
     // Lecture du header
     char buf[100];
     fgets(buf, 100, f);
@@ -70,6 +72,8 @@ void ImageGS::readPGM(const string &filename) {
     FILE* f = fopen(full_filename.c_str(), "r");
     assert(f != NULL);
 
+    std::cout << "Lecture du fichier PGM : " << full_filename << std::endl;
+
     // Lecture du header
     char buf[100];
     fgets(buf, 100, f);
@@ -96,6 +100,8 @@ void ImageGS::writePGM(const string &filename) {
     // Ouverture du flux
     FILE* f = fopen(full_filename.c_str(), "w");
     assert(f != NULL);
+
+    std::cout << "Sauvergarde du fichier PGM : " << full_filename << std::endl;
 
     // Ecriture du header
     fprintf(f,"P5\n#\n%d %d\n255\n", m_width, m_height);
@@ -207,6 +213,12 @@ void ImageGS::recal() {
         m_img[i][j] *= 255.f / max;
 }
 
+void ImageGS::inverse() {
+    for (unsigned i = 0; i < m_height; ++i)
+    for (unsigned j = 0; j < m_width; ++j)
+        m_img[i][j] = (GRAY_SCALE-1) - m_img[i][j];
+}
+
 void ImageGS::thresholding(float t) {
     for (unsigned i = 0; i < m_height; ++i)
     for (unsigned j = 0; j < m_width; ++j)
@@ -284,7 +296,6 @@ void ImageGS::thresholdingOstu() {
         }
         // calcule de la variance en k
         s[i] = w_k * (1.f - w_k)* pow(mu_t*w_k - mu_k, 2.f);
-        //std::cout << mu_k << " " << w_k << " \n";
     }
     delete[] hist;
 
@@ -295,7 +306,6 @@ void ImageGS::thresholdingOstu() {
             max = s[i];
             T = (float)i;
         }
-        std::cout << s[i] << " " << i << " \n";
     }
 
     // Seuillage
@@ -310,13 +320,15 @@ void ImageGS::erosion(float** mask, int width, int height) {
     for (unsigned i = 0; i < m_height; ++i)
     for (unsigned j = 0; j < m_width; ++j) {
         keepPixel = true;
-        for (int m = -(height/2); m < (height/2)+1; ++m)
-            for (int n = -(width/2); n < (width/2)+1; ++n) {
-            unsigned cur_i = i+m; unsigned cur_j = j+n;
-            if(cur_i > 0 && cur_i < m_height && cur_j > 0 && cur_j < m_width) {
+
+        for (int m = -(height/2); m < (height/2)+(height%2); ++m)
+        for (int n = -(width/2); n < (width/2)+(width%2); ++n) {
+            int cur_i = i+m; int cur_j = j+n;
+            if(cur_i >= 0 && cur_i < (int)m_height && cur_j >= 0 && cur_j < (int)m_width) {
                 if(m_img[cur_i][cur_j] != mask[m+height/2][n+width/2])
                     keepPixel = false;
             }
+
         }
 
         // Si un des pixel ne correspond pas au masque on ne le garde pas
@@ -334,10 +346,10 @@ void ImageGS::dilatation(float **mask, int width, int height) {
     for (unsigned i = 0; i < m_height; ++i)
     for (unsigned j = 0; j < m_width; ++j)
         if (m_img[i][j] == 255.f){
-            for (int m = -(height/2); m < (height/2)+1; ++m)
-            for (int n = -(width/2); n < (width/2)+1; ++n) {
-                unsigned cur_i = i+m; unsigned cur_j = j+n;
-                if(cur_i > 0 && cur_i < m_height && cur_j > 0 && cur_j < m_width) {
+            for (int m = -(height/2); m < (height/2)+height%2; ++m)
+            for (int n = -(width/2); n < (width/2)+width%2; ++n) {
+                int cur_i = i+m; int cur_j = j+n;
+                if(cur_i >= 0 && cur_i < (int)m_height && cur_j >= 0 && cur_j < (int)m_width) {
                     dilatedImage[cur_i][cur_j] = mask[m+height/2][n+width/2];
                 }
             }

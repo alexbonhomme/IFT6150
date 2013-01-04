@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -71,12 +72,168 @@ void writeVect(float* vect, unsigned height, string filename) {
     fclose(f);
 }
 
-void foundConnectedComponent(const ImageGS& img){
-    for (int i = 0; i < img.getHeight(); ++i)
-    for (int j = 0; j < img.getWidth(); ++j) {
-        // On vérifit la 8 connexité
+std::vector<int*>* foundConnectedComponents(const ImageGS& img, ImageRGB* out) {
+    int x1, y1, x2, y2;
+    std::vector<int*> *connectList = new std::vector<int*>();
 
+    for (int i = 1; i < img.getHeight()-1; ++i)
+    for (int j = 1; j < img.getWidth()-1; ++j) {
+        // Si on trouve un pixel blanc
+        if(img(i, j) == 255.f) {
+
+            // check d'abord si le pixel n'est pas deja dans un rectangle
+            bool knowPt = false;
+            for (unsigned n = 0; n < connectList->size(); ++n) {
+                x1 = (*connectList)[n][0]; y1 = (*connectList)[n][1];
+                x2 = (*connectList)[n][2]; y2 = (*connectList)[n][3];
+
+                if(i >= y1 && i <= y2 && j >= x1 && j <= x2) {
+                    knowPt = true;
+                    break;
+                }
+            }
+
+            // Le point est inconnu on peut travailler avec
+            if( !knowPt ) {
+
+                // on verifit ca 8 connexité
+                bool connex = true;
+                for (int i_p = i-1; i_p <= i+1; ++i_p)
+                for (int j_p = j-1; j_p <= j+1; ++j_p) {
+                    if(img(i_p, j_p) != 255.f)
+                        connex = false;
+                }
+
+                // Le pixel est 8 connexe
+                if(connex) {
+                    // On construit un rectangle emglobant
+                    x1 = j-1; y1 = i-1;
+                    x2 = j+1; y2 = i+1;
+
+                    // On agrandit le rectangle et on check les nouveaux points
+                    int prev_x2, prev_y2;
+                    do {
+                        bool end_x, end_y, found;
+                        prev_x2 = x2; prev_y2 = y2;
+
+                        do { // recherche en x
+                            end_x = true;
+
+                            ++x2;
+                            if(x2 < (int)img.getWidth()) {
+                                end_x = false;
+
+                                found = false;
+                                for (int i_p = y1; i_p <= min(y2, (int)(img.getHeight()-1)); ++i_p) {
+                                    if(img(i_p, x2) == 255.f) { // on a trouvé un nouveau point
+                                       found = true;
+                                       break;
+                                    }
+                                }
+
+                                // Si l'on n'a pas trouvé de nouveau point on remet x2 a sa valeur
+                                if(!found) {
+                                    --x2;
+                                    end_x = true; // on arrete d'agrandir en x
+                                }
+                            } else {
+                                --x2;
+                            }
+                        } while ( !end_x );
+
+                        do { // recherche en y
+                            end_y = true;
+
+                            ++y2;
+                            if(y2 < (int)img.getHeight()) {
+                                end_y = false;
+
+                                found = false;
+                                for (int j_p = x1; j_p <= min(x2, (int)(img.getWidth()-1)); ++j_p) {
+                                    if(img(y2, j_p) == 255.f) { // on a trouvé un nouveau point
+                                       found = true;
+                                       break;
+                                    }
+
+                                }
+
+                                // Si l'on n'a pas trouvé de nouveau point on remet y2 a sa valeur
+                                if(!found) {
+                                    --y2;
+                                    end_y = true; // on arrete d'agrandir en y
+                                }
+                            } else {
+                                --y2;
+                            }
+                        } while ( !end_y );
+
+                    } while ( prev_x2 != x2 || prev_y2 != y2 ); // On continu tant qu'il que l'on rouve de nouveaux points
+
+
+                    // On vérifit qu'il n'est pas superposé a un autre
+                    // (au quel cas on prendra le plus grand des deux)
+                    bool addRect = true;
+                    for (unsigned n = 0; n < connectList->size(); ++n) {
+                        int old_x1 = (*connectList)[n][0], old_y1 = (*connectList)[n][1];
+                        int old_x2 = (*connectList)[n][2], old_y2 = (*connectList)[n][3];
+
+                        // On check juste le point en bas a droite car
+                        // il est impossible qu'ils aient le meme point de départ
+                        // et logiquement l'algo converge au meme poit d'arrivé
+                        if(x2 == old_x2 && y2 == old_y2) {
+                            addRect = false;
+
+                            // On calculer la taille pour ne garder que le plus grand
+                            if( (x2 - x1)+(y2 - y1) > (old_x2 - old_x1)+(old_y2 - old_y1) ) {
+                                // nouveau est plus grand que l'ancien
+                                // on modifit la list
+                                (*connectList)[n][0] = x1;
+                                (*connectList)[n][1] = y1;
+                            }
+
+                            break;
+                        }
+                    }
+
+                    if(addRect) {
+                        // ajout des coordonnées du rectangle a la list
+                        int *coord = new int[4];
+                        coord[0] = x1; coord[1] = y1;
+                        coord[2] = x2; coord[3] = y2;
+                        connectList->push_back(coord);
+                    }
+                }
+            } // if( !knowPt )
+        }
     }
+
+    // On inscrit les rectangle sur l'image de sortie
+    std::vector<int*> *outList = new std::vector<int*>();
+    for (unsigned n = 0; n < connectList->size(); ++n) {
+        x1 = (*connectList)[n][0]; y1 = (*connectList)[n][1];
+        x2 = (*connectList)[n][2]; y2 = (*connectList)[n][3];
+
+        // Ce filtrage est empirique mais permet d'éliminer facilement la majorité des faux positifs
+        unsigned width = x2 - x1;
+        unsigned height = y2 - y1;
+        float ratio = height / (float)width;
+
+        // On vérifit d'abord le ration (la plaque est un rectangle)
+        if( ratio > 0.2 && ratio < 0.8 ) {
+
+            printf("%d %d\n", width, height);
+            // On vérifit que le rectangle n'est pas trop petit ou trop grand
+            if( width > 30 && width < 200 && height > 7 && height < 60) {
+                out->drawRect(x1, y1, x2, y2);
+                printf("%d %d %d %d\n", x1, y1, x2, y2);
+                outList->push_back((*connectList)[n]);
+            }
+        }
+        //delete[] (*connectList)[n];
+    }
+    delete connectList;
+
+    return outList;
 }
 
 /*
