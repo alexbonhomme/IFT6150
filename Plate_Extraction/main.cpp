@@ -11,14 +11,18 @@
 
 #define RATIO_MIN 0.2f
 #define RATIO_MAX 0.7f
-#define WIDTH_MIN 30
-#define WIDTH_MAX 130
+#define WIDTH_MIN 40
+#define WIDTH_MAX 160
 #define HEIGHT_MIN 7
 #define HEIGHT_MAX 60
-#define T_1_PLATE 16
-#define T_2_PLATE 10
+
+#define T_R1_PLATE 0.3f
+#define T_R2_PLATE 0.2f
+#define T_1_PLATE 32.f
+#define T_2_PLATE 50.f
+
 #define MARGIN 2
-#define T_BIN 0.9
+#define T_BIN 0.9f
 
 int main(int argc, char *argv[]) {
     // Début compteur
@@ -27,13 +31,20 @@ int main(int argc, char *argv[]) {
 
     ImageGS *car;
 
-    if(argc > 1) {
-        car = new ImageGS(argv[1]);
+    if(argc > 2) {
+        string arg(argv[1]);
+
+        if(arg.compare("-pgm") == 0)
+            car = new ImageGS(argv[2]);
+        else if(arg.compare("-ppm") == 0)
+            car = new ImageGS(ImageRGB(argv[2]));
+        else
+            std::cout << "Usage: " << argv[0] << " [-ppm|-pgm] FILE\n";
     } else {
 
 #if 0
-    //car = new ImageGS("../data/991211-001");
-    car = new ImageGS("../data/991211-002");
+    car = new ImageGS("../data/991211-001");
+    //car = new ImageGS("../data/991211-002");
     //car = new ImageGS("../data/991211-003");
 #else
     car = new ImageGS(ImageRGB("../data/0003"));
@@ -46,8 +57,7 @@ int main(int argc, char *argv[]) {
     }
     // filtrage gaussien
     ImageGS gauss(*car);
-    gauss.gaussianFilter(1.f);
-    //car->recal();
+    //gauss.gaussianFilter(1.f);
     gauss.writePGM("0_gauss_filter");
 
     // Calcule du gradient
@@ -91,12 +101,24 @@ int main(int argc, char *argv[]) {
     grad->thresholdingSmart(T_BIN);
     grad->writePGM("2_bin_filter");
 
-    // Opération morphologique pour éliminer le bruit, etc..
+    /* Opération morphologique pour éliminer le bruit, etc..*/
     int width, height;
     float** mask;
 
+#if 0
+    width=2; height=2;
+    mask = new float*[height];
+    for (int i = 0; i < height; ++i) {
+        mask[i] = new float[width];
+        for (int j = 0; j < width; ++j)
+            mask[i][j] = 255.f;
+    }
+    grad->erosion(mask, width, height);
+    grad->writePGM("3_2_close_grad");
+#endif
+
 #if 1
-    width=30; height=1;
+    width=18; height=1;
     mask = new float*[height];
     for (int i = 0; i < height; ++i) {
         mask[i] = new float[width];
@@ -108,7 +130,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 #if 1
-    width=6; height=1;
+    width=1; height=6;
     mask = new float*[height];
     for (int i = 0; i < height; ++i) {
         mask[i] = new float[width];
@@ -148,10 +170,12 @@ int main(int argc, char *argv[]) {
             (*img)(i, j) = (*car)(i+y1, j+x1);
 
         // On effectué un derniere verification basé sur les edge de la plaque
-        ImageGS *plate_grad = new ImageGS(*img);
-        //plate_grad->thresholdingHist(0.8);
-        plate_grad->inverse();
-        plate_grad->thresholdingOstu();
+        ImageGS *plate = new ImageGS(*img);
+
+        plate->inverse();
+        //plate->gaussianFilter(1.f);
+        plate->thresholdingOstu();
+        //plate->thresholdingHist(0.7);
 
 #if 1
         width=1; height=3;
@@ -162,11 +186,11 @@ int main(int argc, char *argv[]) {
                 mask[i][j] = 255.f;
         }
 
-        plate_grad->opening(mask, width, height);
+        plate->opening(mask, width, height);
 #endif
 
         /* Erostion / Disatation extraire les contours */
-        ImageGS erode(*plate_grad);
+        ImageGS erode(*plate);
 #if 1
         width=2; height=2;
         mask = new float*[height];
@@ -180,6 +204,33 @@ int main(int argc, char *argv[]) {
 #endif
 
 #if 1
+        width=1; height=3;
+        mask = new float*[height];
+        for (int i = 0; i < height; ++i) {
+            mask[i] = new float[width];
+            for (int j = 0; j < width; ++j)
+                mask[i][j] = 255.f;
+        }
+
+        plate->dilatation(mask, width, height);
+#endif
+
+        // on soustrait l'érodé au dilaté pour garder que les contours
+        (*plate) -= erode;
+
+#if 0
+        width=2; height=1;
+        mask = new float*[height];
+        for (int i = 0; i < height; ++i) {
+            mask[i] = new float[width];
+            for (int j = 0; j < width; ++j)
+                mask[i][j] = 255.f;
+        }
+
+        plate->closing(mask, width, height);
+#endif
+
+#if 0
         width=2; height=2;
         mask = new float*[height];
         for (int i = 0; i < height; ++i) {
@@ -188,35 +239,56 @@ int main(int argc, char *argv[]) {
                 mask[i][j] = 255.f;
         }
 
-        plate_grad->dilatation(mask, width, height);
+        plate->opening(mask, width, height);
 #endif
-
-        // on soustrait l'érodé au dilaté pour garder que les contours
-        (*plate_grad) -= erode;
 
         char filename[100];
         sprintf(filename, "t_plate_%d", n);
-        plate_grad->writePGM(filename);
+        plate->writePGM(filename);
 
-        //plate_grad->writePGM("grad");
-        int var1=0, var2=0, var3=0;
+        float var=0, var_cpt=0;
+        //int var1=0, var2=0, var3=0;
         for (unsigned j = 1; j < w; ++j) {
             // on compte le nombre de variation
-            if((*plate_grad)(h/3, j) != (*plate_grad)(h/3, j-1))
+            /*
+            if((*plate)(h/3, j) != (*plate)(h/3, j-1))
                 ++var1;
-            if((*plate_grad)(h/2, j) != (*plate_grad)(h/2, j-1))
+            if((*plate)(h/2, j) != (*plate)(h/2, j-1))
                 ++var2;
-            if((*plate_grad)(h-h/3, j) != (*plate_grad)(h-h/3, j-1))
+            if((*plate)(h-h/3, j) != (*plate)(h-h/3, j-1))
                 ++var3;
+            */
+            /*
+            if((*plate)(h/3, j) != (*plate)(h/3, j-1) &&
+               (*plate)(h/2, j) != (*plate)(h/2, j-1) &&
+               (*plate)(h-h/3, j) != (*plate)(h-h/3, j-1) ) {
+            ++var1;++var2;++var3;
+            }
+            */
+            var_cpt = 0;
+            if((*plate)(h/3, j) != (*plate)(h/3, j-1))
+                ++var_cpt;
+            if((*plate)(h/2, j) != (*plate)(h/2, j-1))
+                ++var_cpt;
+            if((*plate)(h-h/3, j) != (*plate)(h-h/3, j-1))
+                ++var_cpt;
+
+            if(var_cpt == 3)
+                var += 2.f;
+            else if(var_cpt == 2)
+                var += 1.f;
+            else if(var_cpt == 1)
+                var += .5f;
         }
-        delete plate_grad; // free
 
         std::cout << "Variations (seuil 1: "<< T_1_PLATE << " - seuil 2: " << T_2_PLATE <<
-                     ") - H/3: " << var1 <<
-                     " H/2: " << var2 <<
-                     " H-H/3: " << var3 << "\n" << std::endl;
+                     ") - H/3: " << var <<
+                     " H/2: " << var/(float)plate->getWidth() <<
+                     " H-H/3: " << var/(float)(plate->getWidth()+plate->getHeight()) << "\n" << std::endl;
 
+        /*
         float cpt=0.f;
+
         if( var1 > T_1_PLATE ) {
             cpt += 1.f;
         } else if( var1 > T_2_PLATE ) {
@@ -232,10 +304,17 @@ int main(int argc, char *argv[]) {
         } else if( var2 > T_2_PLATE ) {
             cpt += 0.5f;
         }
-
-        if(cpt >= 2.f)
+        */
+        //if(cpt >= 2.f)
+        float varRatio = var/(float)(plate->getWidth()+plate->getHeight());
+        if(var > T_1_PLATE && var < T_2_PLATE /* && varRatio > T_R2_PLATE */)
             // ajout a la list
             listImgPlate->push_back(img);
+        else if(varRatio > T_R1_PLATE)
+            // ajout a la list
+            listImgPlate->push_back(img);
+
+        delete plate; // free
     }
     delete listPlate;
 
