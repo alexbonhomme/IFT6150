@@ -4,7 +4,9 @@
 #include "image.h"
 #include "imagegs.h"
 #include <string>
+
 using namespace std;
+class ImageGS;
 
 class ImageRGB : public Image
 {
@@ -58,15 +60,15 @@ public:
 
     /**
      * @brief ImageRGB
-     * @param filename
-     */
-    ImageRGB(const string &filename);
-
-    /**
-     * @brief ImageRGB
      * @param in
      */
     ImageRGB(const ImageGS &in);
+
+    /**
+     * @brief ImageRGB
+     * @param filename
+     */
+    ImageRGB(const string &filename);
 
     /**
      * Destructor

@@ -8,32 +8,12 @@
 using namespace std;
 
 /**
- * Calcule la FFT
- * @brief FFTDD
- * @param mtxR
- * @param mtxI
- * @param lgth
- * @param wdth
- */
-void FFTDD(float** mtxR,float** mtxI,int lgth, int wdth);
-
-/**
- * Calcule la FFT inverse
- * @brief IFFTDD
- * @param mtxR
- * @param mtxI
- * @param lgth
- * @param wdth
- */
-void IFFTDD(float** mtxR,float**  mtxI,int lgth,int wdth);
-
-/**
  * @brief guassianFilter
  * @param vect
  * @param w
  * @param sigma
  */
-void guassianFilter(float* vect, int height, int w, float sigma);
+void gaussianFilter(float* vect, int height, int w, float sigma);
 
 /**
  * @brief writeVect
@@ -47,6 +27,25 @@ void writeVect(float* vect, unsigned height, string filename);
  * @brief foundConnectedComponents
  * @param img
  */
-std::vector<int *> *foundConnectedComponents(const ImageGS& img, ImageRGB* out);
+std::vector<int *> *foundConnectedComponents(const ImageGS& img, ImageRGB* out, float ratio_min, float ratio_max, unsigned width_min, unsigned width_max, unsigned height_min, unsigned height_max);
+
+/**
+ * @brief Conv
+ * @param Img1
+ * @param Img2
+ * @param ImgConv
+ * @param lgth
+ * @param wdth
+ */
+void Conv(float** Img1, float** Img2, float** ImgConv, int lgth, int wdth);
+
+/**
+ * @brief gaussianMask
+ * @param mat
+ * @param lgth
+ * @param wdth
+ * @param sigma
+ */
+void gaussianMask(float** mat, int lgth, int wdth, float sigma);
 
 #endif // TOOLS_H

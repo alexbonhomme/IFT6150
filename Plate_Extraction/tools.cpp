@@ -6,32 +6,18 @@
 #include <iostream>
 #include <vector>
 
+// Fonctions du TP5
+#include "demo5.h"
+
+#define _USE_MATH_DEFINES
+#define GAUSS_FILTER_CENTERED_1D(x, mu, var) (exp(-(pow(x-mu, 2.f))/(2*var))/(2.f*M_PI*var))
+#define GAUSS_FILTER_2D(x,y, var) (exp(-((x*x)+(y*y))/(2.f*var))/(2.f*M_PI*var))
+
 using namespace std;
 
-/*------------------------------------------------*/
-/* DEFINITIONS -----------------------------------*/
-/*------------------------------------------------*/
-#define SWAP(a,b) tempr=(a);(a)=(b);(b)=tempr
-#define SQUARE(X) ((X)*(X))
-#define MAX(i,j)  ((i)>(j)?(i):(j))
-#define MIN(i,j)  ((i)>(j)?(i):(j))
+#define H(j, sig) (exp(-(j*sig*sig)/2.f))
 
-#define NBCHAR 200
-
-#define FFT   1
-#define IFFT -1
-#define FFT2D 2
-
-#define GREY_LEVEL 255
-#define PI 3.141592654
-
-#define WHITE 255
-#define BLACK 0
-/*------------------------------------------------*/
-
-#define H(j, sig) (exp(-(j*pow(sig, 2.f))/2.f))
-
-void guassianFilter(float* vect, int height, int w, float sigma) {
+void gaussianFilter(float* vect, int height, int w, float sigma) {
     float k = 0.f;
 
     // calcule du coef k
@@ -50,6 +36,16 @@ void guassianFilter(float* vect, int height, int w, float sigma) {
         }
         newVect[i] = (1.f/k)*(vect[i] + acc);
     }
+
+    // Second filtrage par une gaussienne simple centre au deux tier du vecteur
+#if 1
+    int mu = height - height/3;
+    float var = height/3.f;
+    for (int i = 0; i < height; ++i) {
+        std::cout << GAUSS_FILTER_CENTERED_1D(i, mu, height);
+        newVect[i] *= (1.f/(var*sqrt(2.f*M_PI)))*exp(-pow(i - mu, 2.f)/(2.f*var*var));
+    }
+#endif
 
     // copy
     for (int i = 0; i < height; ++i)
@@ -72,12 +68,15 @@ void writeVect(float* vect, unsigned height, string filename) {
     fclose(f);
 }
 
-std::vector<int*>* foundConnectedComponents(const ImageGS& img, ImageRGB* out) {
+std::vector<int*>* foundConnectedComponents(const ImageGS& img, ImageRGB* out,
+                                            float ratio_min, float ratio_max,
+                                            unsigned width_min, unsigned width_max,
+                                            unsigned height_min, unsigned height_max) {
     int x1, y1, x2, y2;
     std::vector<int*> *connectList = new std::vector<int*>();
 
-    for (int i = 1; i < img.getHeight()-1; ++i)
-    for (int j = 1; j < img.getWidth()-1; ++j) {
+    for (int i = 1; i < (int)img.getHeight()-1; ++i)
+    for (int j = 1; j < (int)img.getWidth()-1; ++j) {
         // Si on trouve un pixel blanc
         if(img(i, j) == 255.f) {
 
@@ -219,17 +218,16 @@ std::vector<int*>* foundConnectedComponents(const ImageGS& img, ImageRGB* out) {
         float ratio = height / (float)width;
 
         // On vérifit d'abord le ration (la plaque est un rectangle)
-        if( ratio > 0.2 && ratio < 0.7 ) {
-            printf("DEBUG :: Width: %d  Height: %d - Ratio: %f\n", width, height, ratio);
+        if( ratio > ratio_min && ratio < ratio_max ) {
+            printf("DEBUG :: n=%d :: Width: %d  Height: %d - Ratio: %f\n", n, width, height, ratio);
 
             // On vérifit que le rectangle n'est pas trop petit ou trop grand
-            if( width > 30 && width < 130 && height > 7 && height < 60) {
+            if( width > width_min && width < width_max && height > height_min && height < height_max) {
                 out->drawRect(x1, y1, x2, y2);
-                printf("DEBUG : x1:%d y1:%d x2:%d y2:%d\n", x1, y1, x2, y2);
+                printf("DEBUG :: n=%d :: x1:%d y1:%d x2:%d y2:%d\n", n, x1, y1, x2, y2);
                 outList->push_back((*connectList)[n]);
             }
         }
-        //delete[] (*connectList)[n];
     }
     delete connectList;
 
@@ -237,180 +235,97 @@ std::vector<int*>* foundConnectedComponents(const ImageGS& img, ImageRGB* out) {
 }
 
 /*
- * Fonctions importées du TP5 (FonctionDemo5.c)
+ * Fonctions du TP2
  */
-
-/*--------------*/
-/* FOURIER -----*/
-/*--------------*/
-/*------------------------------------------------*/
-/*  FOURN ----------------------------------------*/
-/*------------------------------------------------*/
-void fourn(float data[], unsigned long nn[], int ndim, int isign)
-{
-    int idim;
-    unsigned long i1,i2,i3,i2rev,i3rev,ip1,ip2,ip3,ifp1,ifp2;
-    unsigned long ibit,k1,k2,n,nprev,nrem,ntot;
-    float tempi,tempr;
-    double theta,wi,wpi,wpr,wr,wtemp;
-
-    for (ntot=1,idim=1;idim<=ndim;idim++)
-        ntot *= nn[idim];
-    nprev=1;
-    for (idim=ndim;idim>=1;idim--) {
-        n=nn[idim];
-        nrem=ntot/(n*nprev);
-        ip1=nprev << 1;
-        ip2=ip1*n;
-        ip3=ip2*nrem;
-        i2rev=1;
-        for (i2=1;i2<=ip2;i2+=ip1) {
-            if (i2 < i2rev) {
-                for (i1=i2;i1<=i2+ip1-2;i1+=2) {
-                    for (i3=i1;i3<=ip3;i3+=ip2) {
-                        i3rev=i2rev+i3-i2;
-                        SWAP(data[i3],data[i3rev]);
-                        SWAP(data[i3+1],data[i3rev+1]);
-                    }
-                }
-            }
-            ibit=ip2 >> 1;
-            while (ibit >= ip1 && i2rev > ibit) {
-                i2rev -= ibit;
-                ibit >>= 1;
-            }
-            i2rev += ibit;
-        }
-        ifp1=ip1;
-        while (ifp1 < ip2) {
-            ifp2=ifp1 << 1;
-            theta=isign*6.28318530717959/(ifp2/ip1);
-            wtemp=sin(0.5*theta);
-            wpr = -2.0*wtemp*wtemp;
-            wpi=sin(theta);
-            wr=1.0;
-            wi=0.0;
-            for (i3=1;i3<=ifp1;i3+=ip1) {
-                for (i1=i3;i1<=i3+ip1-2;i1+=2) {
-                    for (i2=i1;i2<=ip3;i2+=ifp2) {
-                        k1=i2;
-                        k2=k1+ifp1;
-                        tempr=(float)wr*data[k2]-(float)wi*data[k2+1];
-                        tempi=(float)wr*data[k2+1]+(float)wi*data[k2];
-                        data[k2]=data[k1]-tempr;
-                        data[k2+1]=data[k1+1]-tempi;
-                        data[k1] += tempr;
-                        data[k1+1] += tempi;
-                    }
-                }
-                wr=(wtemp=wr)*wpr-wi*wpi+wr;
-                wi=wi*wpr+wtemp*wpi+wi;
-            }
-            ifp1=ifp2;
-        }
-        nprev *= n;
+void copy(float** src, float** dst, int lgth, int wdth){
+    //dirty
+    int i,j;
+    for(i=0;i<lgth;i++)
+    for(j=0;j<wdth;j++){
+        dst[i][j] = src[i][j];
     }
 }
 
-/*----------------------------------------------------------*/
-/* FFTDD                                                    */
-/*----------------------------------------------------------*/
-void FFTDD(float** mtxR,float** mtxI,int lgth, int wdth)
-{
- int i,j;
- int posx,posy;
+void ReplaceCenter(float** mat, float** out, int lgth, int wdth){
+    int halfLenght = lgth/2, halfWidth = wdth/2;
+    int i,j;
 
- float* data;
- float* ImgFreqR;
- float* ImgFreqI;
- unsigned long* nn;
-
- /*allocation memoire*/
- data=(float*)malloc(sizeof(float)*(2*wdth*lgth)+1);
- ImgFreqR=(float*)malloc(sizeof(float)*(wdth*lgth));
- ImgFreqI=(float*)malloc(sizeof(float)*(wdth*lgth));
- nn=(unsigned long*)malloc(sizeof(unsigned long)*(FFT2D+1));
-
- /*Remplissage de nn*/
- nn[1]=lgth; nn[2]=wdth;
-
- /*Remplissage de data*/
- for(i=0;i<lgth;i++) for(j=0;j<wdth;j++)
-   { data[2*(i*lgth+j)+1]=mtxR[i][j];
-     data[2*(i*lgth+j)+2]=mtxI[i][j]; }
-
- /*FFTDD*/
- fourn(data,nn,FFT2D,FFT);
-
- /*Remplissage*/
- for(i=0;i<(wdth*lgth);i++)
-  { ImgFreqR[i]=data[(2*i)+1];
-    ImgFreqI[i]=data[(2*i)+2];  }
-
- /*Conversion en Matrice*/
- for(i=0;i<(wdth*lgth);i++)
-  { posy=(int)(i/wdth);
-    posx=(int)(i%wdth);
-
-    mtxR[posy][posx]=ImgFreqR[i];///(wdth*lgth);
-    mtxI[posy][posx]=ImgFreqI[i];}///(wdth*lgth); }
-
- /*Liberation memoire*/
- free(data);
- free(ImgFreqR);
- free(ImgFreqI);
- free(nn);
+    for (i = 0; i < halfLenght; i++)
+    for (j = 0; j < halfWidth; j++){
+        out[i][j] = mat[i+halfLenght][j+halfWidth];
+        out[i+halfLenght][j+halfWidth] = mat[i][j];
+    }
+    for (i = halfLenght; i < lgth; i++)
+    for (j = 0; j < halfWidth; j++){
+        out[i][j] = mat[i-halfLenght][j+halfWidth];
+        out[i-halfLenght][j+halfWidth] = mat[i][j];
+    }
 }
 
+void Conv(float** Img1, float** Img2, float** ImgConv, int lgth, int wdth){
+    float** MatriceImgR1=fmatrix_allocate_2d(lgth,wdth);
+    float** MatriceImgI1=fmatrix_allocate_2d(lgth,wdth);
+    float** MatriceImgR2=fmatrix_allocate_2d(lgth,wdth);
+    float** MatriceImgI2=fmatrix_allocate_2d(lgth,wdth);
+    float** MatriceImgConvR=fmatrix_allocate_2d(lgth,wdth);
+    float** MatriceImgConvI=fmatrix_allocate_2d(lgth,wdth);
 
-/*----------------------------------------------------------*/
-/* IFFTDD                                                   */
-/*----------------------------------------------------------*/
-void IFFTDD(float** mtxR,float**  mtxI,int lgth,int wdth)
-{
- int i,j;
- int posx,posy;
+    int i,j;
 
- float* data;
- float* ImgFreqR;
- float* ImgFreqI;
- unsigned long* nn;
+    copy(Img1, MatriceImgR1, lgth, wdth);
+    ReplaceCenter(Img2, MatriceImgR2, lgth, wdth);
 
- /*allocation memoire*/
- data=(float*)malloc(sizeof(float)*(2*wdth*lgth)+1);
- ImgFreqR=(float*)malloc(sizeof(float)*(wdth*lgth));
- ImgFreqI=(float*)malloc(sizeof(float)*(wdth*lgth));
- nn=(unsigned long*)malloc(sizeof(unsigned long)*(FFT2D+1));
+    for(i=0;i<lgth;i++)
+    for(j=0;j<wdth;j++){
+        MatriceImgI1[i][j]=0.0;
+        MatriceImgI2[i][j]=0.0;
+    }
 
- /*Recadrege*/
+    // On fait la FFT sur chaque image
+    FFTDD(MatriceImgR1,MatriceImgI1,lgth,wdth);
+    FFTDD(MatriceImgR2,MatriceImgI2,lgth,wdth);
 
- /*Remplissage de nn*/
- nn[1]=lgth; nn[2]=wdth;
+    // On convolu (donc on multiplit)
+    MultMatrix(MatriceImgConvR, MatriceImgConvI,
+                         MatriceImgR1, MatriceImgI1,
+                         MatriceImgR2, MatriceImgI2,
+                         lgth, wdth);
 
- /*Remplissage de data*/
- for(i=0;i<lgth;i++) for(j=0;j<wdth;j++)
-   { data[2*(i*lgth+j)+1]=mtxR[i][j];
-     data[2*(i*lgth+j)+2]=mtxI[i][j]; }
+    // FFT inverse
+    IFFTDD(MatriceImgConvR,MatriceImgConvI,lgth,wdth);
 
- /*FFTDD*/
- fourn(data,nn,FFT2D,IFFT);
+    // On calcul le module
+    Mod(ImgConv,MatriceImgConvR,MatriceImgConvI,lgth,wdth);
 
- /*Remplissage*/
- for(i=0;i<(wdth*lgth);i++)
-  { ImgFreqR[i]=data[(2*i)+1];
-    ImgFreqI[i]=data[(2*i)+2]; }
+    //free time
+    free_fmatrix_2d(MatriceImgI1);
+    free_fmatrix_2d(MatriceImgR1);
+    free_fmatrix_2d(MatriceImgI2);
+    free_fmatrix_2d(MatriceImgR2);
+    free_fmatrix_2d(MatriceImgConvR);
+    free_fmatrix_2d(MatriceImgConvI);
+}
 
- /*Conversion en Matrice*/
- for(i=0;i<(wdth*lgth);i++)
-  { posy=(int)(i/wdth);
-    posx=(int)(i%wdth);
+void gaussianMask(float** mat, int lgth, int wdth, float sigma){
+    // Creation du masque
+    int halfLenght = lgth*0.5, halfWidth = wdth*0.5, halfSize = (6*sigma + 1)*0.5;
+    int i,j;
+    float coef=0.0;
 
-   mtxR[posy][posx]=ImgFreqR[i]/(wdth*lgth);
-   mtxI[posy][posx]=ImgFreqI[i]/(wdth*lgth); }
+    for(i=0;i<lgth;i++)
+    for(j=0;j<wdth;j++){
+            if(abs(halfLenght-i) < halfSize && abs(halfWidth-j) < halfSize) {
+                mat[i][j] = GAUSS_FILTER_2D(i-halfLenght, j-halfWidth, sigma);
+                coef += mat[i][j]; // calcul du coef
+            }
+            else
+                mat[i][j] = 0.0;
+        }
 
- /*Liberation memoire*/
- free(data);
- free(ImgFreqR);
- free(ImgFreqI);
- free(nn);
+    coef = 1.0/coef;
+    for(i=0;i<lgth;i++)
+    for(j=0;j<wdth;j++){
+        if(mat[i][j] > 0.0)
+            mat[i][j] = coef*mat[i][j];
+    }
 }

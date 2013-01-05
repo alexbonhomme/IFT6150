@@ -2,10 +2,12 @@
 #define IMAGEGS_H
 
 #include "image.h"
+#include "imagergb.h"
 #include <string>
 #include <assert.h>
 
 using namespace std;
+class ImageRGB;
 
 class ImageGS : public Image
 {
@@ -22,6 +24,12 @@ public:
      * @param in
      */
     ImageGS(const ImageGS &in);
+
+    /**
+     * @brief ImageGS
+     * @param in
+     */
+    ImageGS(const ImageRGB &in);
 
     /**
      * @brief ImageGS
@@ -55,11 +63,13 @@ public:
      * @param img
      * @return
      */
-    inline ImageGS& operator+= (const ImageGS &img) {
+    ImageGS& operator+= (const ImageGS &img) {
         assert(m_height == img.getHeight() && m_width == img.getWidth());
         for (unsigned i = 0; i < m_height; ++i)
         for (unsigned j = 0; j < m_width; ++j)
             m_img[i][j] += img(i, j);
+
+        return *this;
     }
 
     /**
@@ -67,11 +77,13 @@ public:
      * @param img
      * @return
      */
-    inline ImageGS& operator-= (const ImageGS &img) {
+    ImageGS& operator-= (const ImageGS &img) {
         assert(m_height == img.getHeight() && m_width == img.getWidth());
         for (unsigned i = 0; i < m_height; ++i)
         for (unsigned j = 0; j < m_width; ++j)
             m_img[i][j] -= img(i, j);
+
+        return *this;
     }
 
     /**
@@ -119,6 +131,13 @@ public:
     float *computeHistogram();
 
     /**
+     * Estimation de la variance de l'image
+     * @brief computeVariance
+     * @return
+     */
+    float computeVariance();
+
+    /**
      * Recal les valeur de la matrice image entre 0 et 255
      * @brief recal
      */
@@ -129,6 +148,13 @@ public:
      * @brief inverse
      */
     void inverse();
+
+    /**
+     * Applique un filtre gaussien d'écart type sigma
+     * @brief gaussianFilter
+     * @param sigma
+     */
+    void gaussianFilter(float sigma);
 
     /**
      * Seuillage de l'image (binarisation)

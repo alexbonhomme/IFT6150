@@ -22,6 +22,17 @@ ImageRGB::ImageRGB(const ImageRGB &in) :
     }
 }
 
+ImageRGB::ImageRGB(const ImageGS &in) :
+    Image(in.getWidth(), in.getHeight())
+{
+    m_img = new RGBColor*[m_height];
+    for (unsigned i = 0; i < m_height; ++i) {
+        m_img[i] = new RGBColor[m_width];
+        for (unsigned j = 0; j < m_width; ++j)
+            m_img[i][j].r = m_img[i][j].g = m_img[i][j].b = in(i, j);
+    }
+}
+
 ImageRGB::ImageRGB(const string &filename) :
     Image(0, 0)
 {
@@ -58,17 +69,6 @@ ImageRGB::ImageRGB(const string &filename) :
 
     // Fermeture du flux
     fclose(f);
-}
-
-ImageRGB::ImageRGB(const ImageGS &in) :
-    Image(in.getWidth(), in.getHeight())
-{
-    m_img = new RGBColor*[m_height];
-    for (unsigned i = 0; i < m_height; ++i) {
-        m_img[i] = new RGBColor[m_width];
-        for (unsigned j = 0; j < m_width; ++j)
-            m_img[i][j].r = m_img[i][j].g = m_img[i][j].b = in(i, j);
-    }
 }
 
 ImageRGB::~ImageRGB(){

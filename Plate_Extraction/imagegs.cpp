@@ -5,6 +5,9 @@
 #include <math.h>
 #include "tools.h"
 
+#define _USE_MATH_DEFINES
+#define GAUSS_FILTER_2D(x,y, var) (exp(-((x*x)+(y*y))/(2*var))/(2.0*M_PI*var))
+
 #define GRAY_SCALE 256
 
 ImageGS::ImageGS(unsigned width, unsigned height) :
@@ -24,6 +27,18 @@ ImageGS::ImageGS(const ImageGS &in) :
         for (unsigned j = 0; j < m_width; ++j)
             m_img[i][j] = in(i, j);
     }
+}
+
+ImageGS::ImageGS(const ImageRGB &in) :
+    Image(in.getWidth(), in.getHeight())
+{
+    m_img = new float*[m_height];
+    for (unsigned i = 0; i < m_height; ++i) {
+        m_img[i] = new float[m_width];
+        for (unsigned j = 0; j < m_width; ++j)
+            m_img[i][j] = 0.114*in(i, j)[0] + 0.587*in(i, j)[1] + 0.299*in(i, j)[2];
+    }
+
 }
 
 ImageGS::ImageGS(const string &filename) :
@@ -181,11 +196,37 @@ float *ImageGS::computeHistogram() {
         hist[i] = 0.f;
 
     for (unsigned i = 0; i < m_height; ++i)
-    for (unsigned j = 0; j < m_width; ++j) {
+    for (unsigned j = 0; j < m_width; ++j)
         hist[(unsigned)m_img[i][j]]++;
-    }
 
     return hist;
+}
+
+//TODO resultats erronés
+float ImageGS::computeVariance() {
+    // On calcule les pi
+    float* p = computeHistogram();
+    float nPixels = m_height*m_width;
+    for (int i = 0; i < GRAY_SCALE; ++i)
+        p[i] /= nPixels;
+
+    // Calcule de la moyenne des pixels de l'image
+    float avg = 0.f;
+    for (unsigned i = 0; i < m_height; ++i)
+    for (unsigned j = 0; j < m_width; ++j)
+        avg += m_img[i][j];
+    avg /= nPixels;
+
+
+    // On estime la variance
+    float var = 0.f;
+    for (unsigned i = 0; i < m_height; ++i)
+    for (unsigned j = 0; j < m_width; ++j) {
+        var += p[(unsigned)m_img[i][j]]*pow(m_img [i][j], 2.f);
+    }
+
+    // on soustrait le barycentre
+    return var - avg;
 }
 
 void ImageGS::recal() {
@@ -217,6 +258,46 @@ void ImageGS::inverse() {
     for (unsigned i = 0; i < m_height; ++i)
     for (unsigned j = 0; j < m_width; ++j)
         m_img[i][j] = (GRAY_SCALE-1) - m_img[i][j];
+}
+
+/*
+ * Implémentation par boucle car les image ne respecte pas
+ * toutes les prérequis pour fourrier
+ */
+void ImageGS::gaussianFilter(float sigma) {
+    // Creation du masque
+    int halfSize = (6*sigma + 1)*0.5;
+    float coef = 0.f;
+
+    float mask[halfSize*2][halfSize*2];
+    for(int i = -halfSize; i < halfSize; ++i)
+    for(int j = -halfSize; j < halfSize; ++j) {
+        mask[i+halfSize][j+halfSize] = GAUSS_FILTER_2D(i, j, sigma);
+        coef += mask[i+halfSize][j+halfSize]; // calcul du coef
+
+    }
+
+    coef = 1.0/coef;
+    for(int i = -halfSize; i < halfSize; ++i)
+    for(int j = -halfSize; j < halfSize; ++j) {
+        mask[i][j] *= coef;
+    }
+
+    // Filtrage
+    float filtered[m_height][m_width];
+    for (unsigned i = halfSize; i < m_height-halfSize; ++i)
+    for (unsigned j = halfSize; j < m_width-halfSize; ++j) {
+        filtered[i][j] = 0.f;
+        for(int i_m = -halfSize; i_m < halfSize; ++i_m)
+        for(int j_m = -halfSize; j_m < halfSize; ++j_m) {
+            filtered[i][j] += m_img[i+i_m][j+j_m] * mask[i_m+halfSize][j_m+halfSize];
+        }
+    }
+
+    // Recopie
+    for (unsigned i = halfSize; i < m_height-halfSize; ++i)
+    for (unsigned j = halfSize; j < m_width-halfSize; ++j)
+        m_img[i][j] = filtered[i][j];
 }
 
 void ImageGS::thresholding(float t) {

@@ -16,15 +16,15 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    platedetector.cpp \
     tools.cpp \
     imagegs.cpp \
     image.cpp \
-    imagergb.cpp
+    imagergb.cpp \
+    demo5.cpp
 
 HEADERS += \
-    platedetector.h \
     tools.h \
     imagegs.h \
     image.h \
-    imagergb.h
+    imagergb.h \
+    demo5.h
