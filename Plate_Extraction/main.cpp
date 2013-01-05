@@ -16,10 +16,10 @@
 #define HEIGHT_MIN 7
 #define HEIGHT_MAX 60
 
-#define T_R1_PLATE 0.3f
+#define T_R1_PLATE 0.35f
 #define T_R2_PLATE 0.2f
-#define T_1_PLATE 32.f
-#define T_2_PLATE 50.f
+#define T_1_PLATE 30.f
+#define T_2_PLATE 52.f
 
 #define MARGIN 2
 #define T_BIN 0.9f
@@ -307,7 +307,7 @@ int main(int argc, char *argv[]) {
         */
         //if(cpt >= 2.f)
         float varRatio = var/(float)(plate->getWidth()+plate->getHeight());
-        if(var > T_1_PLATE && var < T_2_PLATE /* && varRatio > T_R2_PLATE */)
+        if(var > T_1_PLATE && var < T_2_PLATE && varRatio > T_R2_PLATE)
             // ajout a la list
             listImgPlate->push_back(img);
         else if(varRatio > T_R1_PLATE)

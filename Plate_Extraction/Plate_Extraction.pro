@@ -19,12 +19,10 @@ SOURCES += main.cpp \
     tools.cpp \
     imagegs.cpp \
     image.cpp \
-    imagergb.cpp \
-    demo5.cpp
+    imagergb.cpp
 
 HEADERS += \
     tools.h \
     imagegs.h \
     image.h \
-    imagergb.h \
-    demo5.h
+    imagergb.h
