@@ -6,11 +6,8 @@
 #include <iostream>
 #include <vector>
 
-// Fonctions du TP5
-#include "demo5.h"
-
 #define _USE_MATH_DEFINES
-#define GAUSS_FILTER_CENTERED_1D(x, mu, var) (exp(-(pow(x-mu, 2.f))/(2*var))/(2.f*M_PI*var))
+#define GAUSS_FILTER_CENTERED_1D(x, mu, var) ((1.f/(var*sqrt(2.f*M_PI)))*exp(-pow(i - mu, 2.f)/(2.f*var*var)))
 #define GAUSS_FILTER_2D(x,y, var) (exp(-((x*x)+(y*y))/(2.f*var))/(2.f*M_PI*var))
 
 using namespace std;
@@ -41,10 +38,8 @@ void gaussianFilter(float* vect, int height, int w, float sigma) {
 #if 1
     int mu = height - height/3;
     float var = height/3.f;
-    for (int i = 0; i < height; ++i) {
-        std::cout << GAUSS_FILTER_CENTERED_1D(i, mu, height);
-        newVect[i] *= (1.f/(var*sqrt(2.f*M_PI)))*exp(-pow(i - mu, 2.f)/(2.f*var*var));
-    }
+    for (int i = 0; i < height; ++i)
+        newVect[i] *= GAUSS_FILTER_CENTERED_1D(i, mu, var);
 #endif
 
     // copy
@@ -232,100 +227,4 @@ std::vector<int*>* foundConnectedComponents(const ImageGS& img, ImageRGB* out,
     delete connectList;
 
     return outList;
-}
-
-/*
- * Fonctions du TP2
- */
-void copy(float** src, float** dst, int lgth, int wdth){
-    //dirty
-    int i,j;
-    for(i=0;i<lgth;i++)
-    for(j=0;j<wdth;j++){
-        dst[i][j] = src[i][j];
-    }
-}
-
-void ReplaceCenter(float** mat, float** out, int lgth, int wdth){
-    int halfLenght = lgth/2, halfWidth = wdth/2;
-    int i,j;
-
-    for (i = 0; i < halfLenght; i++)
-    for (j = 0; j < halfWidth; j++){
-        out[i][j] = mat[i+halfLenght][j+halfWidth];
-        out[i+halfLenght][j+halfWidth] = mat[i][j];
-    }
-    for (i = halfLenght; i < lgth; i++)
-    for (j = 0; j < halfWidth; j++){
-        out[i][j] = mat[i-halfLenght][j+halfWidth];
-        out[i-halfLenght][j+halfWidth] = mat[i][j];
-    }
-}
-
-void Conv(float** Img1, float** Img2, float** ImgConv, int lgth, int wdth){
-    float** MatriceImgR1=fmatrix_allocate_2d(lgth,wdth);
-    float** MatriceImgI1=fmatrix_allocate_2d(lgth,wdth);
-    float** MatriceImgR2=fmatrix_allocate_2d(lgth,wdth);
-    float** MatriceImgI2=fmatrix_allocate_2d(lgth,wdth);
-    float** MatriceImgConvR=fmatrix_allocate_2d(lgth,wdth);
-    float** MatriceImgConvI=fmatrix_allocate_2d(lgth,wdth);
-
-    int i,j;
-
-    copy(Img1, MatriceImgR1, lgth, wdth);
-    ReplaceCenter(Img2, MatriceImgR2, lgth, wdth);
-
-    for(i=0;i<lgth;i++)
-    for(j=0;j<wdth;j++){
-        MatriceImgI1[i][j]=0.0;
-        MatriceImgI2[i][j]=0.0;
-    }
-
-    // On fait la FFT sur chaque image
-    FFTDD(MatriceImgR1,MatriceImgI1,lgth,wdth);
-    FFTDD(MatriceImgR2,MatriceImgI2,lgth,wdth);
-
-    // On convolu (donc on multiplit)
-    MultMatrix(MatriceImgConvR, MatriceImgConvI,
-                         MatriceImgR1, MatriceImgI1,
-                         MatriceImgR2, MatriceImgI2,
-                         lgth, wdth);
-
-    // FFT inverse
-    IFFTDD(MatriceImgConvR,MatriceImgConvI,lgth,wdth);
-
-    // On calcul le module
-    Mod(ImgConv,MatriceImgConvR,MatriceImgConvI,lgth,wdth);
-
-    //free time
-    free_fmatrix_2d(MatriceImgI1);
-    free_fmatrix_2d(MatriceImgR1);
-    free_fmatrix_2d(MatriceImgI2);
-    free_fmatrix_2d(MatriceImgR2);
-    free_fmatrix_2d(MatriceImgConvR);
-    free_fmatrix_2d(MatriceImgConvI);
-}
-
-void gaussianMask(float** mat, int lgth, int wdth, float sigma){
-    // Creation du masque
-    int halfLenght = lgth*0.5, halfWidth = wdth*0.5, halfSize = (6*sigma + 1)*0.5;
-    int i,j;
-    float coef=0.0;
-
-    for(i=0;i<lgth;i++)
-    for(j=0;j<wdth;j++){
-            if(abs(halfLenght-i) < halfSize && abs(halfWidth-j) < halfSize) {
-                mat[i][j] = GAUSS_FILTER_2D(i-halfLenght, j-halfWidth, sigma);
-                coef += mat[i][j]; // calcul du coef
-            }
-            else
-                mat[i][j] = 0.0;
-        }
-
-    coef = 1.0/coef;
-    for(i=0;i<lgth;i++)
-    for(j=0;j<wdth;j++){
-        if(mat[i][j] > 0.0)
-            mat[i][j] = coef*mat[i][j];
-    }
 }

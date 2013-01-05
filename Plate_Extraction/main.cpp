@@ -31,12 +31,12 @@ int main(int argc, char *argv[]) {
         car = new ImageGS(argv[1]);
     } else {
 
-#if 1
+#if 0
     //car = new ImageGS("../data/991211-001");
     car = new ImageGS("../data/991211-002");
     //car = new ImageGS("../data/991211-003");
 #else
-    car = new ImageGS(ImageRGB("../data/0002"));
+    car = new ImageGS(ImageRGB("../data/0003"));
     //car = new ImageGS("../data/99122-2"); // plaque trop longue
     //car = new ImageGS("../data/991213-002");
     //car = new ImageGS("../data/991213-010");
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     float** mask;
 
 #if 1
-    width=12; height=1;
+    width=30; height=1;
     mask = new float*[height];
     for (int i = 0; i < height; ++i) {
         mask[i] = new float[width];
@@ -105,18 +105,6 @@ int main(int argc, char *argv[]) {
     }
     grad->closing(mask, width, height);
     grad->writePGM("3_2_close_grad");
-#endif
-
-#if 0
-    width=1; height=9;
-    mask = new float*[height];
-    for (int i = 0; i < height; ++i) {
-        mask[i] = new float[width];
-        for (int j = 0; j < width; ++j)
-            mask[i][j] = 255.f;
-    }
-    grad->closing(mask, width, height);
-    grad->writePGM("3_3_close_grad");
 #endif
 
 #if 1
@@ -130,18 +118,6 @@ int main(int argc, char *argv[]) {
 
     grad->opening(mask, width, height);
     grad->writePGM("4_open_grad");
-#endif
-
-#if 0
-    width=7; height=7;
-    mask = new float*[height];
-    for (int i = 0; i < height; ++i) {
-        mask[i] = new float[width];
-        for (int j = 0; j < width; ++j)
-            mask[i][j] = 255.f;
-    }
-    grad->closing(mask, width, height);
-    grad->writePGM("close_grad");
 #endif
 
     // On applique les rectangle sur l'image de base pour visualiser
