@@ -14,7 +14,7 @@ using namespace std;
  * @param w
  * @param sigma
  */
-void gaussianFilter(float* vect, int height, int w, float sigma);
+void gaussianFilter(float* vect, int height, int w, float sigma, short level=0);
 
 /**
  * @brief writeVect

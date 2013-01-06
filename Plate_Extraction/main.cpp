@@ -10,8 +10,8 @@
 
 //#define GAUSS_PRE_FILTER
 
-#define PROJ_HORIZONTAL 1.2f
-#define PROJ_VERTICAL 1.f
+#define PROJ_HORIZONTAL 1.4f
+//#define PROJ_VERTICAL .9f
 
 #define RATIO_MIN 0.1f
 #define RATIO_MAX 0.7f
@@ -20,14 +20,14 @@
 #define HEIGHT_MIN 7
 #define HEIGHT_MAX 60
 
-#define T_R1_PLATE 0.32f
+#define T_R1_PLATE 0.4f
 #define T_R2_PLATE 0.2f
 #define T_1_PLATE 30.f
 #define T_2_PLATE 52.f
 
 #define MARGIN_H 3
 #define MARGIN_W 1
-#define T_BIN 0.9f
+#define T_BIN 0.90f
 
 int main(int argc, char *argv[]) {
     // Début compteur
@@ -46,14 +46,8 @@ int main(int argc, char *argv[]) {
             std::cout << "Usage: " << argv[0] << " [-ppm|-pgm] FILE\n";
     } else {
         car = new ImageGS("../data/991211-001");
-        //car = new ImageGS("../data/991211-002");
-        //car = new ImageGS("../data/991211-003");
         //car = new ImageGS(ImageRGB("../data/0003"));
         //car = new ImageGS("../data/99122-2");
-        //car = new ImageGS("../data/991213-002");
-        //car = new ImageGS("../data/991213-010");
-        //car = new ImageGS("../data/991213-006");
-        //car = new ImageGS("../data/991213-005");
     }
 
     // mesure de la variance (indicatif)
@@ -85,7 +79,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     // Filtre gaussien sur le vecteur de projection
-    gaussianFilter(vect, grad->getHeight(), 6, 0.05f);
+    gaussianFilter(vect, grad->getHeight(), 6, 0.05f, 1);
 #ifdef _DEBUG_
     writeVect(vect, grad->getHeight(), "data_h_filter.dat");
 #endif
@@ -111,14 +105,15 @@ int main(int argc, char *argv[]) {
     grad->writePGM("1_vertical_filter");
 #endif
 
-    // Projection vertical
+#if 0
+    /* Projection verticale */
     vect = grad->computeVerticalProjection();
 #ifdef _DEBUG_
-    writeVect(vect, grad->getHeight(), "data_v_brut.dat");
+    writeVect(vect, grad->getWidth(), "data_v_brut.dat");
 #endif
 
     // Filtrage gaussien
-    gaussianFilter(vect, grad->getWidth(), 6, 0.05f);
+    gaussianFilter(vect, grad->getWidth(), 6, 0.05f, 0);
 #ifdef _DEBUG_
     writeVect(vect, grad->getWidth(), "data_v_filter.dat");
 #endif
@@ -139,9 +134,12 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+
     delete[] vect; // free
 #ifdef _DEBUG_
     grad->writePGM("1_horizontal_filter");
+#endif
+
 #endif
 
     /* binarisation par seuillage global */
@@ -154,19 +152,7 @@ int main(int argc, char *argv[]) {
     int width, height;
     float** mask;
 
-#if 0
-    width=2; height=2;
-    mask = new float*[height];
-    for (int i = 0; i < height; ++i) {
-        mask[i] = new float[width];
-        for (int j = 0; j < width; ++j)
-            mask[i][j] = 255.f;
-    }
-    grad->erosion(mask, width, height);
-    grad->writePGM("3_2_close_grad");
-#endif
-
-#if 1
+#if 1 // Fermeture
     width=20; height=3;
     mask = new float*[height];
     for (int i = 0; i < height; ++i) {
@@ -180,7 +166,7 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
 
-#if 1
+#if 1 // Ouverture
     width=1; height=5;
     mask = new float*[height];
     for (int i = 0; i < height; ++i) {
@@ -229,6 +215,7 @@ int main(int argc, char *argv[]) {
         // On effectué un derniere verification basé sur les edge de la plaque
         ImageGS *plate = new ImageGS(*img);
         plate->inverse();
+
 #ifdef _DEBUG_
         std::cout << "Variacance: " << plate->computeVariance() << std::endl;
 #endif

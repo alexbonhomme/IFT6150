@@ -7,8 +7,7 @@
 #include <vector>
 
 #define _USE_MATH_DEFINES
-#define GAUSS_FILTER_CENTERED_1D(x, mu, var) ((1.f/(var*sqrt(2.f*M_PI)))*exp(-pow(i - mu, 2.f)/(2.f*var*var)))
-#define GAUSS_FILTER_2D(x,y, var) (exp(-((x*x)+(y*y))/(2.f*var))/(2.f*M_PI*var))
+#define GAUSS_FILTER_CENTERED_1D(x, mu, var) (exp(-pow(i - mu, 2.f)/(2.f*var*var)))
 
 //#define _DEBUG_
 
@@ -16,49 +15,56 @@ using namespace std;
 
 #define H(j, sig) (exp(-(j*sig*sig)/2.f))
 
-void gaussianFilter(float* vect, int height, int w, float sigma) {
+void gaussianFilter(float* vect, int size, int w, float sigma, short level) {
     float k = 0.f;
 
     // calcule du coef k
-    for (int i = 1; i <= w; ++i) {
-        k += H(i, sigma) + 1.f;
+    for (int j = 1; j <= w; ++j) {
+        k += H(j, sigma) + 1.f;
     }
     k *= 2.f;
 
     // Filtrage
-    float* newVect = new float[height];
-    for (int i = 0; i < height; ++i) {
+    float* newVect = new float[size];
+    for (int i = 0; i < size; ++i) {
         float acc = 0.f;
         for (int j = 1; j <= w; ++j) {
             acc += vect[max(i-j, 0)]*H(j, sigma)
-                 + vect[min(i+j, height-1)]*H(j, sigma);
+                 + vect[min(i+j, size-1)]*H(j, sigma);
         }
         newVect[i] = (1.f/k)*(vect[i] + acc);
     }
 
-    // Second filtrage par une gaussienne simple centre 3/5 du vecteur
-#if 1
-    int mu = height - (height/5)*2;
-    float var = height/3.f;
-    for (int i = 0; i < height; ++i)
-        newVect[i] *= GAUSS_FILTER_CENTERED_1D(i, mu, var);
+    if(level == 1) { // Second filtrage par une gaussienne simple centre 3/5 du vecteur
+        int mu = size - (size/5)*2;
+        float var = size/3.f;
+        for (int i = 0; i < size; ++i)
+            newVect[i] *= GAUSS_FILTER_CENTERED_1D(i, mu, var);
+    }
+#if 0
+    else { // Second filtrage par une gaussienne simple centre 1/2 du vecteur
+        int mu = size/2;
+        float var = size;
+        for (int i = 0; i < size; ++i)
+            newVect[i] *= GAUSS_FILTER_CENTERED_1D(i, mu, var);
+    }
 #endif
 
     // copy
-    for (int i = 0; i < height; ++i)
+    for (int i = 0; i < size; ++i)
         vect[i] = newVect[i];
 
     delete[] newVect;
 }
 
-void writeVect(float* vect, unsigned height, string filename) {
+void writeVect(float* vect, unsigned size, string filename) {
     // Output to a text file
     FILE* f = fopen(filename.c_str(), "w");
     assert(f != NULL);
 
     // Ecriture des données
     std::cout << ">> Ecriture des données dans " << filename << std::endl;
-    for (unsigned i = 0; i < height; ++i)
+    for (unsigned i = 0; i < size; ++i)
         fprintf(f, "%d %f\n", i, vect[i]);
 
     // Fermeture du flux
