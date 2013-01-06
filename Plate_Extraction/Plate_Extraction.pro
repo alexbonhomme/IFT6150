@@ -26,3 +26,4 @@ HEADERS += \
     imagegs.h \
     image.h \
     imagergb.h
+

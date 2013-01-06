@@ -9,6 +9,7 @@
 #define GAUSS_FILTER_2D(x,y, var) (exp(-((x*x)+(y*y))/(2*var))/(2.0*M_PI*var))
 
 #define GRAY_SCALE 256
+#define LARGE_GRADIENT // Masque large (exmple 1 0 -1 au lieu de 1 -1)
 
 ImageGS::ImageGS(unsigned width, unsigned height) :
     Image(width, height)
@@ -135,14 +136,19 @@ ImageGS* ImageGS::computeHorizontalGradient() {
 
     for (unsigned i = 0; i < m_height; ++i)
     for (unsigned j = 0; j < m_width; ++j) {
-        // masque 1 0 -1
-        if(j == 0){
+#ifdef LARGE_GRADIENT // masque 1 0 -1
+        if(j == 0)
             (*gradient)(i, j) = fabs(m_img[i][j+1] - m_img[i][j]);
-        } else if(j == m_width-1){
+        else if(j == m_width-1)
             (*gradient)(i, j) = fabs(m_img[i][j] - m_img[i][j-1]);
-        } else {
-            (*gradient)(i, j) = fabs((m_img[i][j+1] - m_img[i][j-1])*0.5);
-        }
+        else
+            (*gradient)(i, j) = fabs((m_img[i][j+1] - m_img[i][j-1])/2.f);
+#else // masque 1 -1
+        if(j < m_width-1)
+            (*gradient)(i, j) = fabs(m_img[i][j+1] - m_img[i][j]);
+        else
+            (*gradient)(i, j) = fabs(m_img[i][j] - m_img[i][j-1]);
+#endif
     }
 
     return gradient;
@@ -153,6 +159,7 @@ ImageGS* ImageGS::computeVerticalGradient() {
 
     for (unsigned i = 0; i < m_height; ++i)
     for (unsigned j = 0; j < m_width; ++j) {
+#ifdef LARGE_GRADIENT
         // masque 1
         //        0
         //       -1
@@ -161,8 +168,14 @@ ImageGS* ImageGS::computeVerticalGradient() {
         } else if(i == m_height-1){
             (*gradient)(i, j) = fabs(m_img[i][j] - m_img[i-1][j]);
         } else {
-            (*gradient)(i, j) = fabs((m_img[i+1][j] - m_img[i-1][j])*0.5);
+            (*gradient)(i, j) = fabs((m_img[i+1][j] - m_img[i-1][j])/2.f);
         }
+#else
+        if(i < m_height-1)
+            (*gradient)(i, j) = fabs(m_img[i+1][j] - m_img[i][j]);
+        else
+            (*gradient)(i, j) = fabs(m_img[i][j] - m_img[i-1][j]);
+#endif
     }
 
     return gradient;
@@ -202,7 +215,6 @@ float *ImageGS::computeHistogram() {
     return hist;
 }
 
-//TODO resultats erronés
 float ImageGS::computeVariance() {
     // On calcule les pi
     float* p = computeHistogram();
@@ -226,7 +238,7 @@ float ImageGS::computeVariance() {
     }
 
     // on soustrait le barycentre
-    return var - avg;
+    return /*sqrt*/((1.f/nPixels)*(var - pow(avg, 2.f)));
 }
 
 void ImageGS::recal() {
@@ -318,16 +330,18 @@ void ImageGS::thresholdingHist(float p) {
     delete[] hist;
 
     // Détermination du seuil à p pourcent de l'histogramme commulé
-    float T;
+    float T = 0.f;
     int i = 0;
-    //printf("%f %f", histAcc[0], p*histAcc[GRAY_SCALE-1]);
     while ( histAcc[i] < p*histAcc[GRAY_SCALE-1]) {
         T = i;
         ++i;
     }
 
-    // Seuillage
+#ifdef _DEBUG_
     std::cout << "Seuillage par Histogramme (seuil calculé: " << T << ")\n";
+#endif
+
+    // Seuillage
     thresholding(T);
 }
 
@@ -344,13 +358,16 @@ void ImageGS::thresholdingSmart(float p) {
     delete[] hist;
 
     // Détermination du seuil à p pourcent de l'histogramme commulé
-    float T;
+    float T = 0.f;
     int i = 0;
     while ( histAcc[i] < p*histAcc[GRAY_SCALE-2])
         T = ++i;
 
-    // Seuillage
+#ifdef _DEBUG_
     std::cout << "Seuillage par Histogramme (seuil calculé: " << T << ")\n";
+#endif
+
+    // Seuillage
     thresholding(T);
 }
 
@@ -381,7 +398,7 @@ void ImageGS::thresholdingOstu() {
     delete[] hist;
 
     // Maximisation de la variance pour trouver T (le seuil)
-    float T, max = 0.f;
+    float T = 0.f, max = 0.f;
     for (int i = 1; i < GRAY_SCALE-1; ++i) {
         if( s[i] > max ) {
             max = s[i];
@@ -389,8 +406,11 @@ void ImageGS::thresholdingOstu() {
         }
     }
 
-    // Seuillage
+#ifdef _DEBUG_
     std::cout << "Seuillage par Otsu (seuil calculé: " << T << ")\n";
+#endif
+
+    // Seuillage
     thresholding(T);
 }
 
@@ -425,8 +445,8 @@ void ImageGS::dilatation(float **mask, int width, int height) {
     float dilatedImage[m_height][m_width];
 
     for (unsigned i = 0; i < m_height; ++i)
-    for (unsigned j = 0; j < m_width; ++j)
-        if (m_img[i][j] == 255.f){
+    for (unsigned j = 0; j < m_width; ++j) {
+        if (m_img[i][j] == mask[height/2][width/2]){
             for (int m = -(height/2); m < (height/2)+height%2; ++m)
             for (int n = -(width/2); n < (width/2)+width%2; ++n) {
                 int cur_i = i+m; int cur_j = j+n;
@@ -434,12 +454,14 @@ void ImageGS::dilatation(float **mask, int width, int height) {
                     dilatedImage[cur_i][cur_j] = mask[m+height/2][n+width/2];
                 }
             }
+        } else {
+            dilatedImage[i][j] = m_img[i][j];
         }
+    }
 
     for (unsigned i = 0; i < m_height; ++i)
     for (unsigned j = 0; j < m_width; ++j)
         m_img[i][j] =  dilatedImage[i][j];
-
 }
 
 void ImageGS::opening(float **mask, int width, int height) {

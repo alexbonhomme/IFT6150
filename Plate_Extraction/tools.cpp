@@ -10,7 +10,7 @@
 #define GAUSS_FILTER_CENTERED_1D(x, mu, var) ((1.f/(var*sqrt(2.f*M_PI)))*exp(-pow(i - mu, 2.f)/(2.f*var*var)))
 #define GAUSS_FILTER_2D(x,y, var) (exp(-((x*x)+(y*y))/(2.f*var))/(2.f*M_PI*var))
 
-#define _DEBUG_
+//#define _DEBUG_
 
 using namespace std;
 
@@ -94,12 +94,13 @@ std::vector<int*>* foundConnectedComponents(const ImageGS& img, ImageRGB* out,
 
                 // on verifit ca 8 connexité
                 bool connex = true;
+#if 0
                 for (int i_p = i-1; i_p <= i+1; ++i_p)
                 for (int j_p = j-1; j_p <= j+1; ++j_p) {
                     if(img(i_p, j_p) != 255.f)
                         connex = false;
                 }
-
+#endif
                 // Le pixel est 8 connexe
                 if(connex) {
                     // On construit un rectangle emglobant
