@@ -14,6 +14,7 @@
 \usepackage{graphicx}
 \usepackage[font=sf, labelfont={sf,bf}, margin=1cm]{caption}
 \usepackage[french,onelanguage,ruled,lined]{algorithm2e} % pour pseudo code
+\usepackage{array}
 
 \title{\huge \textbf{Technique pour l'extraction de plaque d'immatriculation}}
 \author{Alexandre \bsc{Bonhomme} - \small{BONA20128906}}
@@ -197,10 +198,10 @@ Un double seuillage (cf. Algorithme~\ref{seuil_2}) est alors effectué semblable
 	  {\tt ConserverZone()}\;
 	}
 \end{algorithm}\\
-Après expérimentations les suivants ont été retenus et produise de très bons résultats (cf. Figure~\ref{plate}) :
+Après expérimentations les suivants ont été retenus et produise de bons résultats (cf. Figure~\ref{plate}) :
 \begin{align*}
-  T_b &= 30 &T_h &= 52\\
-  Tr_b &= 0.2 &Tr_h &= 0.3
+  T_b &= 28 &T_h &= 52\\
+  Tr_b &= 0.2 &Tr_h &= 0.4
 \end{align*}
 \begin{figure}[H]
 	\centering 
@@ -209,12 +210,41 @@ Après expérimentations les suivants ont été retenus et produise de très bon
 \end{figure}
 
 \section{Résultats expérimentaux}
-Faute d'avoir un jeu de donnée suffisement grand (seulement une trentaine d'image) je n'ai pas pu realiser de statistique. Mais le programme donne de très bon résultats dans la majorités des cas.
-\begin{figure*}[H]
-	\centering 
-	  \includegraphics{img/plate.png}
-	\caption{Resultat final obtenu à partir de la Figure\ref{grad}\label{plate}}
-\end{figure*}
+Faute d'avoir un jeu de donnée suffisement grand (seulement une trentaine d'image) je n'ai pas pu realiser de statistique. Mais le programme donne de bon résultats dans la majorités des cas.
+
+Cependant il arrive que le programme détecte des "faux positifs" en plus des plaques comme le montre la derniere du Tableau~\ref{result}. Dans la majeur partie des cas ceux-ci seraient très rapidement écarté l'application d'OCR (Optical Character Recognition) chargé de la reconnaissance des caractères de la plaque.
+
+\section{Conclusion}
+
+\begin{table*}[ht]
+  \centering
+  \begin{tabular}{|m{150pt}|m{150pt}|m{150pt}|}
+    \hline
+    \multicolumn{3}{|c|}{Reconnaissances effectuées sur des vues de face}\\
+    \hline
+	  \includegraphics[width=150pt]{img/plate_detect_0.png}&
+	  \includegraphics[width=150pt]{img/plate_detect_1.png}&
+	  \includegraphics[width=150pt]{img/plate_detect_2.png}\tabularnewline
+	  \includegraphics[scale=1]{img/plate_0.png}&
+	  \includegraphics[scale=1]{img/plate_1.png}&
+	  \includegraphics[scale=1]{img/plate_2.png}\tabularnewline
+	  \hline
+	  \multicolumn{3}{|c|}{Reconnaissances effectées sur des vues latérales}\\
+	  \hline
+	  \includegraphics[width=150pt]{img/plate_detect_3.png}&
+	  \includegraphics[width=150pt]{img/plate_detect_4.png}&
+	  \includegraphics[width=150pt]{img/plate_detect_5.png}\tabularnewline
+	  \includegraphics[scale=1]{img/plate_3.png}&
+	  \includegraphics[scale=1]{img/plate_4.png}&
+	  \includegraphics[scale=1]{img/plate_5_0.png} \newline
+	  \includegraphics[scale=1]{img/plate_5_1.png}\tabularnewline
+	  \hline
+	\end{tabular}
+	\caption{Resultats expérimentaux\label{result}}
+\end{table*}
+
+
+
 
 \begin{thebibliography}{9}
 \bibitem{paunwala10}

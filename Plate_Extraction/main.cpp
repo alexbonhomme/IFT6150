@@ -22,7 +22,7 @@
 
 #define T_R1_PLATE 0.4f
 #define T_R2_PLATE 0.2f
-#define T_1_PLATE 30.f
+#define T_1_PLATE 28.f
 #define T_2_PLATE 52.f
 
 #define MARGIN_H 3
