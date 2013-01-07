@@ -52,8 +52,8 @@ Pour tenter de localiser la position de la plaque il apparait dons intéressant 
 \end{align}
 \begin{figure}[H]
 	\centering 
-	  \includegraphics[width=100pt]{img/991213-006.png}
-	  \includegraphics[width=100pt]{img/991213-006_grad.png}
+	  \includegraphics[width=115px]{img/991213-006.png}
+	  \includegraphics[width=115px]{img/991213-006_grad.png}
 	\caption{Image d'origine et Image de son gradient verticale\label{grad}}
 \end{figure}
 
@@ -74,7 +74,7 @@ Les paramètres $w$ et $\sigma$ on été déterminés de manière empirique et l
 Grâce à cette technique on réduit considérablement le temps de calcule en limitant les zones de recherches comme le montre la Figure~\ref{v_filter}.
 \begin{figure}[H]
 	\centering 
-	  \includegraphics[width=200pt]{img/991213-006_v_filter_1-2.png}
+	  \includegraphics[width=200px]{img/991213-006_v_filter_1-2.png}
 	\caption{Gradient verticale après un premier filtrage\label{v_filter}}
 \end{figure}
 En partant d'une constation simple j'ai réussis à réduire d'avantage les zones de recherches. En effet, il est quasiment impossible qu'une plaque d'immatriculation se situe dans la partie haute de l'image celle si ce situant généralement dans la partie basse. J'ai donc appliqué un second filtrage Gaussien qui favorise la zone du bas de l'image:
@@ -90,14 +90,14 @@ $H$ étant la hauteur de l'image (donc la taille du vecteur de projection).
 
 \begin{figure}[H]
 	\centering 
-	  \includegraphics[width=210pt]{img/project_h_gauss.png}
+	  \includegraphics[width=230px]{img/project_h_gauss.png}
 	\caption{Projection horizontale et filtrage Gaussien\label{h_proj_gauss}}
 \end{figure}
 
 Comme on peut l'observer sur la Figure~\ref{v_filter_gauss} cela réduit encore l'ensemble en supprimant des zones précédement conservées par le premier filtrage tout en conservant les zones basses de l'image.
 \begin{figure}[H]
 	\centering 
-	  \includegraphics[width=200pt]{img/991213-006_v_filter_gauss.png}
+	  \includegraphics[width=200px]{img/991213-006_v_filter_gauss.png}
 	\caption{Gradient verticale après le second filtrage\label{v_filter_gauss}}
 \end{figure}
 
@@ -109,10 +109,10 @@ Le seuil (\ref{eq:seuil_1}) utilisé pour le filtrage $T$ est une pondération d
 \subsection{Détection des composantes connexes}
 Afin de pouvoir détecter les composantes connexes il faut préalablement traiter le résultat du gradient avec différente opérateur morphologique tel que l'ouverture et la fermeture. L'opération d'ouverture correspond à l'application succéssive d'un masque d'érosion et d'un masque de dilatation de même taille. La fermeture quant à elle s'effectue en appliquand d'abord un masque de dilatation puis un masque d'érosion. L'ouverture permet de supprimer les composantes isolées et la fermeture permet de combler les "trous" au sein des zones connexes.
 
-Ces opérations requièrent une binarisation de l'image qui à été effectuée grâce à un seuillage par histogramme légèrement modifié pour ne pas tenir compte des niveaux de gris égaux à 0.
+Ces opérations requièrent une binarisation de l'image qui à été effectuée grâce à un seuillage par histogramme légèrement modifié pour ne pas tenir compxe des niveaux de gris égaux à 0.
 \begin{figure}[H]
 	\centering 
-	  \includegraphics[width=200pt]{img/991213-006_morpho.png}
+	  \includegraphics[width=200px]{img/991213-006_morpho.png}
 	\caption{Application des opérateurs morphologiques\label{morpho}}
 \end{figure}
 Le résultats présenté dans la Figure~\ref{morpho} à été obtenu en appliquant successifs le masque de fermeture (\ref{eq:closing}) (de taille $20 \times 3$) et le masque d'ouverture (\ref{eq:opening}) (de taille $1 \times 5$).
@@ -136,7 +136,7 @@ Le résultats présenté dans la Figure~\ref{morpho} à été obtenu en appliqua
 Une fois ces traitements effectués un algorithme de recherche des composantes connexes à été appliqué.
 \begin{figure}[H]
 	\centering 
-	  \includegraphics[width=200pt]{img/991213-006_detect_1.png}
+	  \includegraphics[width=200px]{img/991213-006_detect_1.png}
 	\caption{Localisation des composantes connexes\label{connexes}}
 \end{figure}
 
@@ -144,10 +144,10 @@ Une fois ces traitements effectués un algorithme de recherche des composantes c
 Afin d'éliminter une grande partie des zones détectées par l'algorithme de recherche les auteurs proposent de tenir compte de la morphologie d'une plaque d'immatriculation tel que la hauteur, la largeur et le ratio hauteur/largeur.
 
 \subsubsection{Analyser de la rectangularité et du ratio} 
-Pour effectuer cette analyse nous partons de connaissances à prioris sur les plaques d'immatriculations. Nous savons qu'une plaque réglementaire doit avoir un aspect plus ou moins restangulaire. Ainsi son ratio devrait être comprit entre 0,2 et 0,7. On fixera, en plus de cela, une longueur et une largeur minimale/maximale qui pourront être adaptés suivant le contexte d'utilisation. Les valeurs que j'ai retenu sont légèrement différentes de l'article originale (qui traite exclusivement des plaques Indiennes). Les plaque considérées comme potentiellement admissibles devront avoir une largeur et une hauteur minimum respectivement de 35 et 7; et une largeur et une hauteur maximum de 200 et 60.
+Pour effectuer cette analyse nous partons de connaissances à prioris sur les plaques d'immatriculations. Nous savons qu'une plaque réglementaire doit avoir un aspect plus ou moins restangulaire. Ainsi son ratio devrait être comprit entre 0,2 et 0,7. On fixera, en plus de cela, une longueur et une largeur minimale/maximale qui pourront être adapxés suivant le contexte d'utilisation. Les valeurs que j'ai retenu sont légèrement différentes de l'article originale (qui traite exclusivement des plaques Indiennes). Les plaque considérées comme potentiellement admissibles devront avoir une largeur et une hauteur minimum respectivement de 35 et 7; et une largeur et une hauteur maximum de 200 et 60.
 \begin{figure}[H]
 	\centering 
-	  \includegraphics[width=200pt]{img/991213-006_detect_2.png}
+	  \includegraphics[width=200px]{img/991213-006_detect_2.png}
 	\caption{Localisation des composantes connexes après filtrage\label{connexes_2}}
 \end{figure}
 Comme le montre la Figure~\ref{connexes_2} ce filtrage réduit considérablement les zones de recherches, mais certaines zones de "non plaque" restent tout de même détectées.
@@ -169,7 +169,7 @@ Suite à un seuillage automatique utilisant la technique de Ostu\cite{otsu79} un
 \end{gather}
 
 \subsubsection{Analyse des points d'intérêts}
-Le dernier filtrage effectué permet didentifier, parmis les zones retenues, les plaques d'immatriculations valides. Pour cela les l'auteurs de l'article proposent de mesurer les variations présente entre les caractères de la plaque et sont arrière plan. Les mesures sont effectuées horizontalement à trois endroits clées de chaque zones :
+Le dernier filtrage effectué permet d'identifier, parmis les zones retenues, les plaques d'immatriculations valides. Pour cela les l'auteurs de l'article proposent de mesurer les variations présentent entre les caractères de la plaque et son fond. Les mesures sont effectuées horizontalement à trois endroits clées de chaque zones
 \begin{align*}
   \frac{H}{3}, \frac{H}{2}\text{ et }H - \frac{H}{3}
 \end{align*}
@@ -179,11 +179,11 @@ avec $H$ la hauteur de la zones (cf. Figure~\ref{plate_bin}).
 	  \includegraphics{img/plate_bin.png}
 	\caption{Mesure des variations verticales au sein d'une zone\label{plate_bin}}
 \end{figure}
-La technique proposée fonctionne relativement bien et permet d'éliminer la majorité des faux positifs. Cependant celle-ci comporte plusieurs problèmes. En effet, si l'on mesure indépendamment les variations des trois zones celle-ci est très sensible au bruit de type "poivre et sel" (généré par la binarisation de zones bruitées). Une solution serait alors de mesurer simultanément les variations aux trois endroits. Cette solution est tout à fait viable pour les plaques parfaitement horizontales mais devient beaucoup moins efficase lors d'une légère inclinaison de la plaque (déformation du à la perspective par exemple). 
+La technique proposée fonctionne relativement bien et permet d'éliminer la majorité des faux positifs. Cependant celle-ci comporte plusieurs problèmes. En effet, si l'on mesure indépendamment les variations des trois zones celle-ci est très sensible au bruit de type "poivre et sel" (généré par la binarisation de zones bruitées). Une solution serait alors de mesurer simultanément les variations aux trois endroits. Cette solution est tout à fait viable pour les plaques parfaitement horizontales mais devient beaucoup moins efficase lors d'une légère inclinaison de la plaque (déformation dû à la perspective par exemple). 
 
-Afin de tenter de résoudre ce problème j'ai mis en place une pondération de la mesure de variation de tel sorte qu'une changement d'état simultané des trois zones apporte une contribution plus forte qu'une variation de deux zones ou que'une unique variation. Les poids qui sont apparues les plus naturels sont $2, 1 \text{ et } 0.5$.
+Afin de tenter de résoudre ce problème j'ai mis en place une pondération de la mesure de variation de tel sorte qu'un changement d'état simultané des trois zones apporte une contribution plus forte qu'une variation de deux zones ou qu'une unique variation. Les poids qui sont apparues les plus naturels sont $2, 1 \text{ et } 0.5$.
 
-L'algoritme initial propose ensuite d'effectuer un seuillage simple afin de ne garder que les zones possédant un nombre de variations suffisantes. Lors de l'implémentation de cette technique j'ai pu constater que le nombre de variations verticales correspondant à une plaque est relativement dépendant de la taille de la zone (la cause étant la taille du masque utilisé lors de l'érosion/dilatation appliqué lors de la détection de contours). J'ai donc mis en place un clacul du ratio de variation
+L'algoritme initial propose ensuite d'effectuer un seuillage simple afin de ne garder que les zones possédants un nombre de variations suffisantes. Lors de l'implémentation de cette technique j'ai pu constater que le nombre de variations verticales correspondant à une plaque est relativement dépendant de la taille de la zone (la cause étant la taille du masque utilisé lors de l'érosion/dilatation appliquée lors de la détection de contours). J'ai donc mis en place un calcul du ratio de variation
 \begin{equation}
   R_v = \frac{v}{H+L}
 \end{equation}
@@ -198,7 +198,7 @@ Un double seuillage (cf. Algorithme~\ref{seuil_2}) est alors effectué semblable
 	  {\tt ConserverZone()}\;
 	}
 \end{algorithm}\\
-Après expérimentations les suivants ont été retenus et produise de bons résultats (cf. Figure~\ref{plate}) :
+Après expérimentations les valeurs suivantes ont été retenues et produises de bons résultats (cf. Figure~\ref{plate}) :
 \begin{align*}
   T_b &= 28 &T_h &= 52\\
   Tr_b &= 0.2 &Tr_h &= 0.4
@@ -210,30 +210,35 @@ Après expérimentations les suivants ont été retenus et produise de bons rés
 \end{figure}
 
 \section{Résultats expérimentaux}
-Faute d'avoir un jeu de donnée suffisement grand (seulement une trentaine d'image) je n'ai pas pu realiser de statistique. Mais le programme donne de bon résultats dans la majorités des cas.
+Faute d'avoir un jeu de donnée suffisement grand (seulement une trentaine d'images) je n'ai pas pu réaliser de statistiques. Mais le programme donne de bon résultats dans la majorités des cas.
 
-Cependant il arrive que le programme détecte des "faux positifs" en plus des plaques comme le montre la derniere du Tableau~\ref{result}. Dans la majeur partie des cas ceux-ci seraient très rapidement écarté l'application d'OCR (Optical Character Recognition) chargé de la reconnaissance des caractères de la plaque.
+Cependant il arrive que le programme détecte des "faux positifs" en plus des plaques comme le montre la dernière case du Tableau~\ref{result}. Dans la majeure partie des cas ceux-ci seraient très rapidement écartés par l'application d'OCR (Optical Character Recognition) chargé de la reconnaissance des caractères de la plaque.
 
 \section{Conclusion}
+La solution proposée par les auteurs de l'article semble très performante et permet la détection d'une ou plusieurs plaques au sein d'une image. Leur implémentation, contrairement à la mienne, utilise un prétraitement à base de sigmoid pour corriger le contraste de l'image initiale. Je n'ai malheureusement pas eu le temps d'implémenter cette partie car j'ai préféré me concentrer sur la morphologie, mais je pense que se prétraitement pourrait grandement améliorer mon implémentation qui est très sensible à la qualité de l'image initiale. Aussi je pense qu'un meilleur filtrage du bruit serait un véritable plus afin d'éviter les "faux positifs".
+
+Cependant, mon implémentation et celle de l'article souffre, à mon avis, d'un problème commun dû à la nature des hyperparamètres de tailles (hauteur et largeur des zones de recherches). Ceux-ci, étants fixés pour une certaine taille d'image, risquent d'apparaitre trop petits ou trop grands lors d'un changement de résolution. Il faudrait utiliser un système basé sur des proportions relatives à la taille de l'image en lieu et place de dimensions fixes. 
+
+Au vue de la nature de l'algorithme et de sont temps d'exécution il pourrait très facilement être appliqué sur un flux vidéo. Le temps d'exécution moyen de mon implémentation est comprit entre 0,07s et 0,09s soit une possibilité de traitement d'environ 10 images par seconde ce qui serait tout à fait correct pour une application de gestion de flux routier par exemple. 
 
 \begin{table*}[ht]
   \centering
-  \begin{tabular}{|m{150pt}|m{150pt}|m{150pt}|}
+  \begin{tabular}{|m{150px}|m{150px}|m{150px}|}
     \hline
     \multicolumn{3}{|c|}{Reconnaissances effectuées sur des vues de face}\\
     \hline
-	  \includegraphics[width=150pt]{img/plate_detect_0.png}&
-	  \includegraphics[width=150pt]{img/plate_detect_1.png}&
-	  \includegraphics[width=150pt]{img/plate_detect_2.png}\tabularnewline
+	  \includegraphics[width=150px]{img/plate_detect_0.png}&
+	  \includegraphics[width=150px]{img/plate_detect_1.png}&
+	  \includegraphics[width=150px]{img/plate_detect_2.png}\tabularnewline
 	  \includegraphics[scale=1]{img/plate_0.png}&
 	  \includegraphics[scale=1]{img/plate_1.png}&
 	  \includegraphics[scale=1]{img/plate_2.png}\tabularnewline
 	  \hline
 	  \multicolumn{3}{|c|}{Reconnaissances effectées sur des vues latérales}\\
 	  \hline
-	  \includegraphics[width=150pt]{img/plate_detect_3.png}&
-	  \includegraphics[width=150pt]{img/plate_detect_4.png}&
-	  \includegraphics[width=150pt]{img/plate_detect_5.png}\tabularnewline
+	  \includegraphics[width=150px]{img/plate_detect_3.png}&
+	  \includegraphics[width=150px]{img/plate_detect_4.png}&
+	  \includegraphics[width=150px]{img/plate_detect_5.png}\tabularnewline
 	  \includegraphics[scale=1]{img/plate_3.png}&
 	  \includegraphics[scale=1]{img/plate_4.png}&
 	  \includegraphics[scale=1]{img/plate_5_0.png} \newline
@@ -242,8 +247,6 @@ Cependant il arrive que le programme détecte des "faux positifs" en plus des pl
 	\end{tabular}
 	\caption{Resultats expérimentaux\label{result}}
 \end{table*}
-
-
 
 
 \begin{thebibliography}{9}
