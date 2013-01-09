@@ -4,6 +4,11 @@
 class Image
 {
 public:
+    /**
+     * @brief Image
+     * @param width
+     * @param height
+     */
     Image(unsigned width, unsigned height);
 
     /**

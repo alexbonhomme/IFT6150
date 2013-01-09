@@ -175,13 +175,43 @@ public:
      */
     void thresholdingOstu();
 
-
+    /**
+     * Binarisation par histogramme sans tenir compte des pixels à zeros
+     * @brief thresholdingSmart
+     * @param p
+     */
     void thresholdingSmart(float p);
 
-    // Opérateurs morphologiques
+    /**
+     * @brief erosion
+     * @param mask
+     * @param width
+     * @param height
+     */
     void erosion(float **mask, int width, int height);
+
+    /**
+     * @brief dilatation
+     * @param mask
+     * @param width
+     * @param height
+     */
     void dilatation(float **mask, int width, int height);
+
+    /**
+     * @brief opening
+     * @param mask
+     * @param width
+     * @param height
+     */
     void opening(float **mask, int width, int height);
+
+    /**
+     * @brief closing
+     * @param mask
+     * @param width
+     * @param height
+     */
     void closing(float **mask, int width, int height);
 
 private:

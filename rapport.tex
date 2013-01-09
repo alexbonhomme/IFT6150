@@ -48,7 +48,7 @@ L'éssentiel de cet algorithme se base sur des connaissances à priori que nous 
 
 Pour tenter de localiser la position de la plaque il apparait donc intéressant d'effectuer une recherche des contours verticaux. Pour cela il est proposé de calculer le gradient vertical de l'image :
 \begin{align}
-  G_v(i, j) = |I(i, j + 1) + I(i, j)|
+  G_v(i, j) = |I(i, j + 1) - I(i, j)|
 \end{align}
 \begin{figure}[H]
 	\centering 
@@ -94,7 +94,7 @@ $H$ étant la hauteur de l'image (donc la taille du vecteur de projection).
 	\caption{Projection horizontale et filtrage Gaussien\label{h_proj_gauss}}
 \end{figure}
 
-Comme on peut l'observer sur la Figure~\ref{v_filter_gauss} cela réduit encore l'ensemble en supprimant des zones précédement conservées par le premier filtrage tout en conservant les zones basses de l'image.
+Comme on peut l'observer sur la Figure~\ref{v_filter_gauss} cela réduit encore l'ensemble en supprimant certaines zones précédement conservées par le premier filtrage tout en gardant les zones basses de l'image.
 \begin{figure}[H]
 	\centering 
 	  \includegraphics[width=200px]{img/991213-006_v_filter_gauss.png}
@@ -152,8 +152,8 @@ Pour effectuer cette analyse nous partons de connaissances à prioris sur les pl
 \end{figure}
 Comme le montre la Figure~\ref{connexes_2} ce filtrage réduit considérablement les zones de recherche, mais certaines zones de "non plaque" restent tout de même détectées.
 
-\subsubsection{Detection de contours}
-Suite à un seuillage automatique utilisant la technique de Ostu\cite{otsu79} un processus d'érosion (\ref{eq:erode}) et de dilatation (\ref{eq:dilate}) est réalisé pour tenter améliorer les contours dans la zone de detection.
+\subsubsection{Amélioration des contours}
+Suite à un seuillage automatique, utilisant la technique de Ostu\cite{otsu79}, un processus d'érosion (\ref{eq:erode}) et de dilatation (\ref{eq:dilate}) est réalisé pour tenter améliorer les contours dans la zone de detection.
 \begin{gather}
   \label{eq:erode}
   \left( \begin{array}{c} 
@@ -183,15 +183,15 @@ La technique proposée fonctionne relativement bien et permet d'éliminer la maj
 
 Afin de tenter de résoudre ce problème j'ai mis en place une pondération de la mesure de variation de telle sorte qu'un changement d'état simultané des trois zones apporte une contribution plus forte qu'une variation de deux zones ou qu'une unique variation. Les poids qui sont apparus les plus naturels sont $2, 1 \text{ et } 0.5$.
 
-L'algoritme initial propose ensuite d'effectuer un seuillage simple afin de ne garder que les zones possédant un nombre de variations suffisantes. Lors de l'implémentation de cette technique j'ai pu constater que le nombre de variations verticales correspondant à une plaque est relativement dépendant de la taille de la zone (la cause étant la taille du masque utilisé lors de l'érosion/dilatation appliquée lors de la détection de contours). J'ai donc mis en place un calcul du ratio de variation
+L'algoritme initial propose ensuite d'effectuer un seuillage simple afin de ne garder que les zones possédant un nombre de variations suffisantes. Lors de l'implémentation de cette technique j'ai pu constater que le nombre de variations verticales correspondant à une plaque est relativement dépendant de la taille de la zone (ceci étant, en partie, dû à la taille des masques utilisés lors de l'érosion/dilatation effectuée pour accentuer les contours). J'ai donc mis en place un calcul du ratio de variation
 \begin{equation}
   R_v = \frac{v}{H+L}
 \end{equation}
 avec $H \text{ et } L$ respectivement la hauteur et la largeur de la zone, et $v$ le nombre de variations précédement mesuré.
 
-Un double seuillage (cf. Algorithme~\ref{seuil_2}) est alors effectué semblable à un seuillage par hystérésis.
+Un double seuillage (cf. Algorithme~\ref{algo:seuil_2}) est alors effectué semblable à un seuillage par hystérésis.
 \begin{algorithm} 
-	\caption{Seuillage varation\label{seuil_2}}
+	\caption{Seuillage varation\label{algo:seuil_2}}
 	\KwIn{$v, R_v$}
 	
 	\If{($v > T_b$ et $v < T_h$ et $R_v > Tr_b$) ou ($R_v > Tr_h$)}{

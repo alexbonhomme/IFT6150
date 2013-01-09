@@ -234,11 +234,10 @@ float ImageGS::computeVariance() {
     float var = 0.f;
     for (unsigned i = 0; i < m_height; ++i)
     for (unsigned j = 0; j < m_width; ++j) {
-        var += p[(unsigned)m_img[i][j]]*pow(m_img [i][j], 2.f);
+        var += p[(unsigned)m_img[i][j]]*pow(m_img[i][j] - avg, 2.f);
     }
 
-    // on soustrait le barycentre
-    return /*sqrt*/((1.f/nPixels)*(var - pow(avg, 2.f)));
+    return /*sqrt*/(var/nPixels);
 }
 
 void ImageGS::recal() {

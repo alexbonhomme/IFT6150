@@ -11,6 +11,9 @@ class ImageGS;
 class ImageRGB : public Image
 {
 public:
+    /**
+     * @brief The RGBColor struct
+     */
     struct RGBColor{
         float r;
         float g;
@@ -103,6 +106,14 @@ public:
      */
     void writePPM(const string &filename);
 
+    /**
+     * Dessine un rectangle rouge avec une diagonale allant du point (x1, y1) au point (x2, y2)
+     * @brief drawRect
+     * @param x1
+     * @param y1
+     * @param x2
+     * @param y2
+     */
     void drawRect(unsigned x1, unsigned y1, unsigned x2, unsigned y2);
 
 private:
